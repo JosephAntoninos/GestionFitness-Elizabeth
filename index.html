@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Joseph Antoninos | Gestión Fitness</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Joseph Antoninos | Client OS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 * {
@@ -18,6 +18,7 @@ background: #0f0f0f;
 color: #e7e7e7;
 overflow-x: hidden;
 line-height: 1.6;
+-webkit-tap-highlight-color: transparent;
 }
 
 /* Pantalla de bloqueo */
@@ -36,11 +37,7 @@ z-index: 9999;
 text-align: center;
 padding: 20px;
 }
-
-.lock-screen.hidden {
-display: none;
-}
-
+.lock-screen.hidden { display: none; }
 .lock-logo {
 font-size: 14px;
 letter-spacing: 3px;
@@ -48,14 +45,12 @@ text-transform: uppercase;
 color: #6eb2cc;
 margin-bottom: 30px;
 }
-
 .lock-screen h1 {
 font-size: 2.5rem;
 font-weight: 800;
 margin-bottom: 10px;
 color: #e7e7e7;
 }
-
 .lock-screen h2 {
 font-size: 1.5rem;
 font-weight: 600;
@@ -63,9 +58,9 @@ color: #6eb2cc;
 margin-bottom: 30px;
 letter-spacing: 2px;
 }
-
 .pin-input {
-background: #1a1a1a;
+background: rgba(26,26,26,0.8);
+backdrop-filter: blur(12px);
 border: 1px solid #2f6a87;
 color: #e7e7e7;
 font-size: 2rem;
@@ -76,12 +71,9 @@ width: 200px;
 letter-spacing: 10px;
 margin-bottom: 20px;
 outline: none;
+transition: 0.3s;
 }
-
-.pin-input:focus {
-border-color: #ea6c36;
-}
-
+.pin-input:focus { border-color: #ea6c36; }
 .pin-btn {
 padding: 16px 40px;
 border-radius: 40px;
@@ -95,145 +87,170 @@ border: none;
 cursor: pointer;
 font-size: 1rem;
 }
-
-.pin-btn:hover {
-background: #9a5131;
-}
-
-.pin-error {
-color: #ea6c36;
-margin-top: 15px;
-font-size: 0.9rem;
-display: none;
-}
+.pin-btn:hover { background: #9a5131; }
+.pin-error { color: #ea6c36; margin-top: 15px; font-size: 0.9rem; display: none; }
 
 /* Contenido principal */
-.main-content {
-display: none;
-}
-
-.main-content.visible {
-display: block;
-}
+.main-content { display: none; }
+.main-content.visible { display: block; }
 
 /* Dashboard */
 .dashboard {
-background: #1a1a1a;
-border-bottom: 1px solid #2f6a87;
-padding: 20px 20px;
+background: rgba(26,26,26,0.75);
+backdrop-filter: blur(16px);
+-webkit-backdrop-filter: blur(16px);
+border-bottom: 1px solid rgba(47,106,135,0.3);
+padding: 16px 12px;
 display: flex;
 flex-wrap: wrap;
-justify-content: center;
-gap: 30px;
+justify-content: space-around;
+align-items: center;
+gap: 12px;
 text-align: center;
-position: static;
+position: sticky;
 top: 0;
 z-index: 100;
-backdrop-filter: blur(10px);
 }
-
 .dashboard-item {
 display: flex;
 flex-direction: column;
 align-items: center;
+min-width: 60px;
 }
-
 .dashboard-label {
-font-size: 0.8rem;
+font-size: 0.7rem;
 text-transform: uppercase;
-letter-spacing: 2px;
+letter-spacing: 1.5px;
 color: #6eb2cc;
-margin-bottom: 5px;
+margin-bottom: 4px;
+opacity: 0.9;
 }
-
 .dashboard-value {
-font-size: 1.2rem;
+font-size: 1rem;
 font-weight: 700;
 color: #e7e7e7;
 }
-
-.progress-circle {
+/* Círculo de Score */
+.score-circle {
 width: 60px;
 height: 60px;
 border-radius: 50%;
-background: conic-gradient(#ea6c36 0deg 245deg, #2a2a2a 245deg 360deg);
 display: flex;
 align-items: center;
 justify-content: center;
-margin: 5px 0;
+margin: 2px 0;
+transition: background 0.5s ease;
+position: relative;
 }
-
-.progress-circle span {
+.score-circle span {
 background: #1a1a1a;
 width: 48px;
 height: 48px;
 border-radius: 50%;
 display: flex;
+flex-direction: column;
 align-items: center;
 justify-content: center;
-font-weight: 700;
+font-weight: 800;
+font-size: 1rem;
+color: #e7e7e7;
+line-height: 1;
+}
+.score-label {
+font-size: 0.6rem;
+font-weight: 600;
+letter-spacing: 0.5px;
+margin-top: 2px;
+text-transform: uppercase;
+}
+
+/* Banner de asistente DeepSeek */
+.assistant-banner {
+margin: 12px 16px;
+padding: 12px 16px;
+background: rgba(26,26,26,0.8);
+backdrop-filter: blur(12px);
+border-radius: 20px;
+border: 1px solid rgba(47,106,135,0.3);
+display: flex;
+align-items: center;
+gap: 12px;
+font-size: 0.9rem;
+transition: 0.3s;
+}
+.assistant-icon {
+font-size: 1.5rem;
+background: linear-gradient(135deg, #2f6a87, #6eb2cc);
+width: 40px;
+height: 40px;
+border-radius: 12px;
+display: flex;
+align-items: center;
+justify-content: center;
+flex-shrink: 0;
+}
+.assistant-text {
+color: #cbd5e1;
+font-weight: 500;
+line-height: 1.4;
+}
+.assistant-highlight {
 color: #ea6c36;
+font-weight: 700;
 }
 
 /* Hero */
 .hero {
-min-height: 90vh;
+min-height: 80vh;
 background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2f6a87 100%);
 display: flex;
 align-items: center;
 justify-content: center;
-padding: 40px;
+padding: 30px 20px;
 text-align: center;
 }
-
-.hero-content {
-max-width: 800px;
-}
-
+.hero-content { max-width: 800px; }
 .hero h1 {
-font-size: 4rem;
+font-size: 2.8rem;
 font-weight: 800;
-margin-bottom: 10px;
+margin-bottom: 8px;
 color: #e7e7e7;
+letter-spacing: -0.5px;
 }
-
 .hero h2 {
-font-size: 2rem;
+font-size: 1.5rem;
 font-weight: 600;
 color: #6eb2cc;
-margin-bottom: 30px;
+margin-bottom: 20px;
 letter-spacing: 2px;
 }
-
 .hero p {
-font-size: 1.4rem;
+font-size: 1.1rem;
 font-weight: 300;
 color: #e7e7e7;
-margin-bottom: 30px;
+margin-bottom: 20px;
 line-height: 1.5;
 }
-
 .feature-list {
 list-style: none;
 display: flex;
 flex-wrap: wrap;
 justify-content: center;
-gap: 20px;
-margin-bottom: 40px;
+gap: 10px;
+margin-bottom: 30px;
 }
-
 .feature-list li {
-background: rgba(110, 178, 204, 0.1);
+background: rgba(110,178,204,0.1);
 border: 1px solid #6eb2cc;
-padding: 10px 20px;
+padding: 8px 16px;
 border-radius: 30px;
 color: #6eb2cc;
 font-weight: 500;
+font-size: 0.85rem;
 }
-
 .btn {
 display: inline-block;
-padding: 18px 38px;
+padding: 16px 32px;
 border-radius: 40px;
 background: #ea6c36;
 color: #e7e7e7;
@@ -243,308 +260,222 @@ letter-spacing: 1px;
 transition: 0.3s;
 border: none;
 cursor: pointer;
+font-size: 1rem;
 }
-
-.btn:hover {
-background: #9a5131;
-transform: translateY(-3px);
-box-shadow: 0 10px 20px rgba(234, 108, 54, 0.3);
-}
+.btn:hover { background: #9a5131; transform: translateY(-2px); }
 
 /* Secciones */
 .section {
-padding: 50px 20px;
+padding: 40px 16px;
 max-width: 1100px;
 margin: auto;
 }
-
 .section-title {
-font-size: 2.5rem;
+font-size: 2rem;
 font-weight: 800;
-margin-bottom: 20px;
+margin-bottom: 12px;
 text-align: center;
 color: #e7e7e7;
 }
-
 .section-subtitle {
 text-align: center;
 color: #6eb2cc;
-margin-bottom: 50px;
-font-size: 1.1rem;
+margin-bottom: 30px;
+font-size: 0.95rem;
 }
-
 .cards {
 display: grid;
-grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-gap: 25px;
+grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+gap: 16px;
 }
-
 .card {
 background: #1a1a1a;
-padding: 30px;
-border-radius: 24px;
+padding: 24px;
+border-radius: 20px;
 border: 1px solid #2f6a87;
 transition: 0.3s;
 text-align: center;
 }
+.card:active { transform: scale(0.98); }
+.card h3 { margin-bottom: 10px; color: #e7e7e7; font-size: 1.1rem; }
+.card p { color: #6eb2cc; font-size: 0.9rem; }
 
-.card:hover {
-transform: translateY(-5px);
-border-color: #ea6c36;
-box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
-
-.card h3 {
-margin-bottom: 15px;
-color: #e7e7e7;
-}
-
-.card p {
-color: #6eb2cc;
-}
-
-/* Evaluación inicial (Tanita) */
+/* Evaluación inicial */
 .eval-grid {
 display: grid;
-grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-gap: 25px;
+grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+gap: 16px;
 }
-
 .eval-card {
 background: #1a1a1a;
-border-radius: 24px;
-padding: 25px;
+border-radius: 20px;
+padding: 20px;
 border: 1px solid #2f6a87;
 }
-
 .eval-card h4 {
 color: #6eb2cc;
-font-size: 1.1rem;
-margin-bottom: 15px;
+font-size: 0.9rem;
+margin-bottom: 10px;
 text-transform: uppercase;
 letter-spacing: 1px;
 }
-
-.eval-number {
-font-size: 2.5rem;
-font-weight: 800;
-color: #ea6c36;
-}
-
-.eval-unit {
-font-size: 1rem;
-color: #6eb2cc;
-margin-left: 5px;
-}
-
+.eval-number { font-size: 2rem; font-weight: 800; color: #ea6c36; }
+.eval-unit { font-size: 0.8rem; color: #6eb2cc; margin-left: 4px; }
 .eval-segment {
 display: flex;
 justify-content: space-between;
-padding: 8px 0;
+padding: 6px 0;
 border-bottom: 1px solid rgba(255,255,255,0.05);
+font-size: 0.85rem;
 }
-
-.eval-segment:last-child {
-border: none;
-}
-
-.eval-segment span:first-child {
-color: #94a3b8;
-}
-
-.eval-segment span:last-child {
-color: #e7e7e7;
-font-weight: 600;
-}
+.eval-segment:last-child { border: none; }
+.eval-segment span:first-child { color: #94a3b8; }
+.eval-segment span:last-child { color: #e7e7e7; font-weight: 600; }
 
 /* Calendario */
-.weeks-container {
-display: flex;
-flex-direction: column;
-gap: 30px;
-}
-
+.weeks-container { display: flex; flex-direction: column; gap: 20px; }
 .week-box {
 background: #1a1a1a;
-border-radius: 24px;
-padding: 25px;
+border-radius: 20px;
+padding: 20px;
 border: 1px solid #2f6a87;
 }
-
-.week-box h3 {
-font-size: 1.3rem;
-margin-bottom: 15px;
-color: #ea6c36;
-}
-
+.week-box h3 { font-size: 1.2rem; margin-bottom: 12px; color: #ea6c36; }
 .calendar {
 display: grid;
-grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-gap: 15px;
+grid-template-columns: repeat(7, 1fr);
+gap: 8px;
 }
-
 .day {
 background: #0f0f0f;
-padding: 15px;
-border-radius: 18px;
+padding: 10px 4px;
+border-radius: 14px;
 text-align: center;
 border: 1px solid #2a2a2a;
+transition: 0.2s;
+position: relative;
 }
-
 .day strong {
 display: block;
-margin-bottom: 8px;
+margin-bottom: 2px;
 color: #e7e7e7;
+font-size: 0.8rem;
+font-weight: 600;
 }
-
 .day span {
 color: #6eb2cc;
 display: block;
-margin-bottom: 10px;
-font-size: 0.9rem;
+margin-bottom: 6px;
+font-size: 0.7rem;
+line-height: 1.2;
 }
-
 .day input[type="checkbox"] {
 appearance: none;
-width: 24px;
-height: 24px;
+width: 28px;
+height: 28px;
 background: #2a2a2a;
-border-radius: 6px;
+border-radius: 8px;
 cursor: pointer;
 border: 2px solid #2f6a87;
 transition: 0.2s;
+margin: 0 auto;
+display: block;
 }
-
 .day input[type="checkbox"]:disabled {
 opacity: 0.4;
 cursor: not-allowed;
+background: #1a1a1a;
+border-color: #333;
 }
-
 .day input[type="checkbox"]:checked {
 background: #ea6c36;
 border-color: #ea6c36;
 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
-background-size: 18px;
+background-size: 16px;
 background-position: center;
 background-repeat: no-repeat;
 }
 
-/* Progreso */
-.progress-container {
-background: #1a1a1a;
-padding: 40px;
-border-radius: 24px;
-text-align: center;
-border: 1px solid #2f6a87;
+/* Estados del día */
+.day.state-pending {
+border-color: #ffee00;
+background: #ffee000f;
 }
-
-.progress-bar {
-width: 100%;
-height: 24px;
-background: #2a2a2a;
-border-radius: 20px;
-overflow: hidden;
-margin-top: 20px;
+.day.state-completed {
+border-color: #00ff00;
+background: #00ff000f;
 }
-
-.progress {
-height: 100%;
-background: linear-gradient(90deg, #2f6a87, #ea6c36);
-transition: width 0.5s ease;
-border-radius: 20px;
+.day.state-omitted {
+border-color: #cd0000;
+background: #cd00000f;
 }
-
-.share-btn {
-display: inline-block;
-margin-top: 25px;
-padding: 14px 30px;
-border-radius: 40px;
-background: #25D366;
-color: white;
-text-decoration: none;
-font-weight: 700;
-letter-spacing: 1px;
-transition: 0.3s;
-border: none;
-cursor: pointer;
-font-size: 1rem;
+.day.state-unavailable {
+border-color: #333;
+background: #0a0a0a;
+opacity: 0.7;
 }
-
-.share-btn:hover {
-background: #1da851;
-transform: translateY(-3px);
-}
-
-.hidden {
-display: none !important;
+.day.state-unavailable strong,
+.day.state-unavailable span {
+color: #555;
 }
 
 /* Registro de cargas */
 .exercise-log {
 background: #1a1a1a;
-border-radius: 24px;
-padding: 25px;
-margin-bottom: 20px;
+border-radius: 20px;
+padding: 20px;
+margin-bottom: 16px;
 border: 1px solid #2f6a87;
 }
-
 .exercise-log h4 {
 color: #ea6c36;
-margin-bottom: 15px;
+margin-bottom: 12px;
 display: flex;
 align-items: center;
-gap: 10px;
+gap: 8px;
+flex-wrap: wrap;
+font-size: 1rem;
 }
-
 .weeks-inputs {
 display: grid;
 grid-template-columns: repeat(4, 1fr);
-gap: 10px;
-margin-top: 10px;
+gap: 8px;
+margin-top: 8px;
 }
-
 .week-input-group {
 display: flex;
 flex-direction: column;
 align-items: center;
 }
-
 .week-input-group label {
-font-size: 0.8rem;
+font-size: 0.7rem;
 color: #6eb2cc;
-margin-bottom: 5px;
+margin-bottom: 4px;
 }
-
 .load-input {
 background: #0f0f0f;
 border: 1px solid #2f6a87;
 color: #e7e7e7;
-padding: 10px;
+padding: 8px 4px;
 border-radius: 12px;
 text-align: center;
-width: 80px;
+width: 100%;
+max-width: 70px;
+font-size: 0.9rem;
 }
-
-.load-input:focus {
-border-color: #ea6c36;
-outline: none;
-}
-
+.load-input:focus { border-color: #ea6c36; outline: none; }
 .video-btn {
-padding: 8px 16px;
+padding: 6px 14px;
 background: #2f6a87;
 border: none;
 border-radius: 20px;
 color: #e7e7e7;
-font-size: 0.8rem;
+font-size: 0.75rem;
 cursor: pointer;
 transition: 0.3s;
-margin-left: 10px;
+margin-left: 4px;
 }
-
-.video-btn:hover {
-background: #6eb2cc;
-}
+.video-btn:hover { background: #6eb2cc; }
 
 /* Modal Shorts */
 .modal {
@@ -559,15 +490,13 @@ justify-content: center;
 align-items: center;
 z-index: 1000;
 }
-
 .modal-shorts-container {
 position: relative;
 display: flex;
 flex-direction: column;
 align-items: center;
-gap: 15px;
+gap: 12px;
 }
-
 .close-modal {
 align-self: flex-end;
 background: none;
@@ -577,19 +506,17 @@ font-size: 32px;
 cursor: pointer;
 line-height: 1;
 }
-
 .shorts-video-wrapper {
 width: 270px;
 height: 480px;
-max-width: 90vw;
-max-height: 80vh;
+max-width: 85vw;
+max-height: 70vh;
 position: relative;
 border-radius: 16px;
 overflow: hidden;
 box-shadow: 0 0 30px rgba(0,0,0,0.7);
 background: #000;
 }
-
 .shorts-video-wrapper iframe {
 width: 100%;
 height: 100%;
@@ -598,57 +525,30 @@ border: none;
 
 /* Footer */
 .footer {
-padding: 60px 20px;
+padding: 40px 16px;
 text-align: center;
 background: #0a0a0a;
 border-top: 1px solid #2f6a87;
 }
+.footer h2 { color: #e7e7e7; font-size: 1.3rem; }
+.footer p { color: #6eb2cc; max-width: 500px; margin: 10px auto 0; font-size: 0.9rem; }
 
-.footer h2 {
-color: #e7e7e7;
-}
+.hidden { display: none !important; }
 
-.footer p {
-color: #6eb2cc;
-max-width: 600px;
-margin: 15px auto 0;
-}
-
-.whatsapp {
-position: fixed;
-bottom: 25px;
-right: 25px;
-background: #25D366;
-width: 65px;
-height: 65px;
-border-radius: 50%;
-display: flex;
-justify-content: center;
-align-items: center;
-font-size: 30px;
-text-decoration: none;
-box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-z-index: 999;
-}
-
-@media (max-width: 768px) {
-.hero h1 {
-font-size: 2.8rem;
-}
-.section-title {
-font-size: 2rem;
-}
-.weeks-inputs {
-grid-template-columns: 1fr 1fr;
-}
-.dashboard {
-gap: 15px;
-font-size: 0.9rem;
-}
-.shorts-video-wrapper {
-width: 240px;
-height: 400px;
-}
+@media (max-width: 480px) {
+.dashboard { padding: 12px 8px; gap: 8px; }
+.dashboard-item { min-width: 50px; }
+.dashboard-value { font-size: 0.85rem; }
+.score-circle { width: 50px; height: 50px; }
+.score-circle span { width: 40px; height: 40px; font-size: 0.85rem; }
+.hero h1 { font-size: 2.2rem; }
+.hero h2 { font-size: 1.2rem; }
+.section-title { font-size: 1.6rem; }
+.weeks-inputs { grid-template-columns: 1fr 1fr; }
+.assistant-banner { margin: 10px 12px; padding: 10px 14px; font-size: 0.8rem; }
+.calendar { grid-template-columns: repeat(4, 1fr); }
+.day strong { font-size: 0.7rem; }
+.day span { font-size: 0.65rem; }
 }
 </style>
 </head>
@@ -656,7 +556,7 @@ height: 400px;
 
 <!-- Pantalla de bloqueo -->
 <div class="lock-screen" id="lockScreen">
-<div class="lock-logo">JOSEPH ANTONINOS | GESTIÓN FITNESS</div>
+<div class="lock-logo">JOSEPH ANTONINOS | CLIENT OS 1.0</div>
 <h1>Acceso Privado</h1>
 <h2>Ingresa tu código</h2>
 <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="····" inputmode="numeric">
@@ -674,18 +574,27 @@ height: 400px;
 <span class="dashboard-value">Elizabeth</span>
 </div>
 <div class="dashboard-item">
-<span class="dashboard-label">Semana</span>
-<span class="dashboard-value" id="currentWeekDisplay">1 de 4</span>
+<span class="dashboard-label">Día actual</span>
+<span class="dashboard-value" id="currentDayDisplay">1 de 28</span>
+</div>
+<div class="dashboard-item" id="scoreContainer">
+<span class="dashboard-label">Score</span>
+<div class="score-circle" id="scoreCircle">
+<span id="scoreCircleText">0%</span>
+</div>
+<span class="score-label" id="scoreLabel">—</span>
 </div>
 <div class="dashboard-item">
-<span class="dashboard-label">Progreso</span>
-<div class="progress-circle" id="progressCircle">
-<span id="progressCircleText">0%</span>
-</div>
-</div>
-<div class="dashboard-item">
-<span class="dashboard-label">Próxima revisión</span>
+<span class="dashboard-label">Próx. revisión</span>
 <span class="dashboard-value" id="reviewDate">15 Julio</span>
+</div>
+</div>
+
+<!-- Asistente DeepSeek -->
+<div class="assistant-banner" id="assistantBanner">
+<div class="assistant-icon" id="assistantIcon">🧠</div>
+<div class="assistant-text" id="assistantText">
+Bienvenida, Eli. Tu sistema de transformación está listo.
 </div>
 </div>
 
@@ -693,15 +602,15 @@ height: 400px;
 <section class="hero">
 <div class="hero-content">
 <h1>JOSEPH ANTONINOS</h1>
-<h2>GESTIÓN FITNESS</h2>
+<h2>CLIENT OS 1.0</h2>
 <p>Sistema de Fuerza y Composición Corporal</p>
-<p style="font-size: 1.1rem; font-weight: 400;">Hola Elizabeth 👋<br>
-Este programa fue diseñado para ayudarte a desarrollar en 4 semanas fuerza, masa muscular y consistencia sin abandonar las actividades que disfrutas.</p>
+<p style="font-size: 1rem; font-weight: 400;">Hola Eli 👋<br>
+Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y consistencia en 4 semanas. Sin abandonar las actividades que disfrutas.</p>
 <ul class="feature-list">
-<li>✓ Calendario interactivo</li>
-<li>✓ Seguimiento de progreso</li>
+<li>✓ Calendario de racha</li>
+<li>✓ Score de adherencia</li>
 <li>✓ Videos guiados</li>
-<li>✓ Soporte directo</li>
+<li>✓ Sin castigos</li>
 </ul>
 <a href="#programa" class="btn">Comenzar Programa</a>
 </div>
@@ -715,27 +624,17 @@ Este programa fue diseñado para ayudarte a desarrollar en 4 semanas fuerza, mas
 <div class="card"><h3>💪 Fuerza</h3><p>Desarrollar fuerza general mediante movimientos fundamentales.</p></div>
 <div class="card"><h3>🏋️ Masa Muscular</h3><p>Aumentar la masa muscular de forma progresiva.</p></div>
 <div class="card"><h3>🏃 Resistencia</h3><p>Mantener la condición aeróbica ya desarrollada.</p></div>
-<div class="card"><h3>📈 Adherencia</h3><p>Crear hábitos sostenibles y fáciles de seguir.</p></div>
+<div class="card"><h3>📈 Adherencia</h3><p>Crear hábitos sostenibles sin presión.</p></div>
 </div>
 </section>
 
-<!-- Evaluación Inicial (Tanita) -->
+<!-- Evaluación Inicial -->
 <section class="section">
 <h2 class="section-title">Evaluación Inicial</h2>
 <p class="section-subtitle">Composición corporal de referencia — Tanita MC-780MA-N</p>
-
 <div class="eval-grid">
-<!-- Peso y BMR -->
-<div class="eval-card">
-<h4>⚖️ Peso Total</h4>
-<div class="eval-number">95.8<span class="eval-unit">kg</span></div>
-</div>
-<div class="eval-card">
-<h4>🔥 Metabolismo Basal</h4>
-<div class="eval-number">1633<span class="eval-unit">kcal</span></div>
-</div>
-
-<!-- Masa Muscular -->
+<div class="eval-card"><h4>⚖️ Peso Total</h4><div class="eval-number">95.8<span class="eval-unit">kg</span></div></div>
+<div class="eval-card"><h4>🔥 Metabolismo Basal</h4><div class="eval-number">1633<span class="eval-unit">kcal</span></div></div>
 <div class="eval-card">
 <h4>💪 Masa Muscular (kg)</h4>
 <div class="eval-segment"><span>Tronco</span><span>29.3</span></div>
@@ -744,8 +643,6 @@ Este programa fue diseñado para ayudarte a desarrollar en 4 semanas fuerza, mas
 <div class="eval-segment"><span>Pierna Izq.</span><span>7.9</span></div>
 <div class="eval-segment"><span>Pierna Der.</span><span>8.0</span></div>
 </div>
-
-<!-- Grasa Corporal -->
 <div class="eval-card">
 <h4>🧈 Grasa Corporal (%)</h4>
 <div class="eval-segment"><span>Tronco</span><span>42.6%</span></div>
@@ -759,55 +656,42 @@ Este programa fue diseñado para ayudarte a desarrollar en 4 semanas fuerza, mas
 
 <!-- Calendario -->
 <section class="section">
-<h2 class="section-title">Calendario 4 Semanas</h2>
+<h2 class="section-title">Calendario de Adherencia</h2>
+<p class="section-subtitle">Cada día cuenta. Sin bloqueos. Sin culpa.</p>
 <div class="weeks-container" id="weeksContainer"></div>
 </section>
 
-<!-- Fuerza A y B con registro de cargas -->
+<!-- Fuerza A -->
 <section class="section">
 <h2 class="section-title">Fuerza A</h2>
 <div id="workoutA"></div>
 </section>
 
+<!-- Fuerza B -->
 <section class="section">
 <h2 class="section-title">Fuerza B</h2>
 <div id="workoutB"></div>
-</section>
-
-<!-- Progreso general -->
-<section class="section">
-<h2 class="section-title">Progreso del Programa</h2>
-<div class="progress-container">
-<h3>Días completados: <span id="completedDays">0</span> / 28</h3>
-<div class="progress-bar"><div class="progress" id="progressFill"></div></div>
-<p style="margin-top:15px; color:#ea6c36; font-weight:600;" id="progressPercent">0%</p>
-<div id="shareContainer" class="hidden">
-<button id="shareBtn" class="share-btn">📤 Compartir progreso con Joseph</button>
-</div>
-</div>
 </section>
 
 <!-- ¿Cómo funciona? -->
 <section id="programa" class="section">
 <h2 class="section-title">¿Cómo funciona?</h2>
 <div class="cards">
-<div class="card"><h3>1. Completa tus sesiones</h3><p>Marca los días en el calendario al terminar.</p></div>
+<div class="card"><h3>1. Completa tus sesiones</h3><p>Marca los días cuando termines. Si un día no puedes, regresa después.</p></div>
 <div class="card"><h3>2. Registra tus pesos</h3><p>Anota las cargas de cada ejercicio.</p></div>
 <div class="card"><h3>3. Revisa tus videos</h3><p>Accede a la técnica correcta cuando quieras.</p></div>
-<div class="card"><h3>4. Da seguimiento</h3><p>Observa tu evolución en el dashboard.</p></div>
-<div class="card"><h3>5. Soporte directo</h3><p>Contáctame por WhatsApp si tienes dudas.</p></div>
+<div class="card"><h3>4. Observa tu Score</h3><p>El semáforo te indica tu ritmo real, no un castigo.</p></div>
+<div class="card"><h3>5. Soporte directo</h3><p>Contáctame si tienes dudas o molestias.</p></div>
 </div>
 </section>
 
 <!-- Footer -->
 <footer class="footer">
 <h2>Joseph Antoninos</h2>
-<p>Entrenamiento basado en sistemas, progresión y resultados sostenibles.</p>
+<p>Entrenamiento basado en sistemas, progresión y retención.</p>
 </footer>
 
-<a class="whatsapp" href="https://wa.me/525531178903" target="_blank">💬</a>
-
-<!-- Modal video (Shorts) -->
+<!-- Modal video -->
 <div class="modal" id="videoModal">
 <div class="modal-shorts-container">
 <button class="close-modal" onclick="closeVideo()">&times;</button>
@@ -833,10 +717,11 @@ if (pinInput.value === CORRECT_PIN) {
 lockScreen.classList.add('hidden');
 mainContent.classList.add('visible');
 if (!window.systemInitialized) {
+initStartDate();
 buildCalendar();
 buildWorkoutLog('workoutA', exercisesA, videoIdsA);
 buildWorkoutLog('workoutB', exercisesB, videoIdsB);
-updateProgressUI();
+updateAllUI();
 window.systemInitialized = true;
 }
 } else {
@@ -850,17 +735,20 @@ pinBtn.addEventListener('click', checkPin);
 pinInput.addEventListener('keypress', function(e) {
 if (e.key === 'Enter') checkPin();
 });
-
 pinInput.addEventListener('input', function() {
 pinError.style.display = 'none';
 });
 
 // ================== DATOS DEL PROGRAMA ==================
 const TOTAL_DAYS = 28;
-const WEEK_DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-const ACTIVITIES = ['Fuerza A', 'Circuitos', 'Movilidad & Cardio Suave', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso'];
+const ACTIVITIES = [
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso'
+];
 
-const exercisesA = ['Sentadilla Goblet 3x10', 'Press Banco con Mancuernas 3x10', 'Remo 3x10', 'Plancha 3x30 seg'];
+const exercisesA = ['Sentadilla Goblet 3x10', 'Press Banco Mancuernas 3x10', 'Remo 3x10', 'Plancha 3x30 seg'];
 const exercisesB = ['Peso Muerto Rumano 3x10', 'Press Militar 3x10', 'Jalón al Pecho 3x10', 'Pallof Press 3x12'];
 const videoIdsA = ['F3-DxxLNrqw', '48L0oQApm_0', '2z3tI5c7Oc8', '3AM7L2k7BEw'];
 const videoIdsB = ['SAdzug-v7D0', 'IuR427toLXE', 'udUQ99c3oRE', 'PSb76pXrGNI'];
@@ -872,30 +760,147 @@ allExercises.forEach(ex => {
 if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
 });
 
+// Fecha de inicio
+let startDate = localStorage.getItem('fitnessStartDate');
+function initStartDate() {
+if (!startDate) {
+startDate = new Date().toISOString().split('T')[0];
+localStorage.setItem('fitnessStartDate', startDate);
+}
+}
+function getDayIndexFromStart() {
+const start = new Date(startDate + 'T00:00:00');
+const today = new Date();
+today.setHours(0,0,0,0);
+const diffTime = today - start;
+const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+return Math.min(Math.max(diffDays, 0), TOTAL_DAYS - 1);
+}
+
 function saveAll() {
 localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
 localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
 }
 
-function updateProgressUI() {
-const completed = completedDays.filter(d => d).length;
-const percent = Math.round((completed / TOTAL_DAYS) * 100);
-document.getElementById('completedDays').textContent = completed;
-document.getElementById('progressFill').style.width = percent + '%';
-document.getElementById('progressPercent').textContent = percent + '%';
-document.getElementById('progressCircleText').textContent = percent + '%';
-document.getElementById('progressCircle').style.background = 
-`conic-gradient(#ea6c36 0deg ${percent * 3.6}deg, #2a2a2a ${percent * 3.6}deg 360deg)`;
+// ================== SCORE DE ADHERENCIA (sobre días disponibles) ==================
+function getAvailableDaysCount() {
+const todayIndex = getDayIndexFromStart();
+return todayIndex + 1; // días 0..todayIndex inclusive
+}
 
-const currentWeek = Math.min(Math.floor(completed / 7) + 1, 4);
-document.getElementById('currentWeekDisplay').textContent = `Semana ${currentWeek} de 4`;
+function getAdherenceScore() {
+const available = getAvailableDaysCount();
+const completed = completedDays.slice(0, available).filter(d => d).length;
+const pct = available === 0 ? 0 : Math.round((completed / available) * 100);
+let label, color;
+if (pct >= 90) { label = 'Excelente'; color = '#22c55e'; }
+else if (pct >= 75) { label = 'Bueno'; color = '#eab308'; }
+else if (pct >= 50) { label = 'Riesgo'; color = '#f97316'; }
+else { label = 'Crítico'; color = '#ef4444'; }
+return { score: pct, label, color };
+}
 
-// Mostrar/ocultar botón de compartir
-const shareContainer = document.getElementById('shareContainer');
-if (percent >= 50) {
-shareContainer.classList.remove('hidden');
+function updateAdherenceScore() {
+const { score, label, color } = getAdherenceScore();
+const circle = document.getElementById('scoreCircle');
+const circleText = document.getElementById('scoreCircleText');
+const scoreLabel = document.getElementById('scoreLabel');
+
+circle.style.background = `conic-gradient(${color} 0deg ${score * 3.6}deg, #2a2a2a ${score * 3.6}deg 360deg)`;
+circleText.textContent = score + '%';
+scoreLabel.textContent = label;
+scoreLabel.style.color = color;
+
+// Actualizar día actual en dashboard
+const todayIndex = getDayIndexFromStart();
+document.getElementById('currentDayDisplay').textContent = `Día ${todayIndex + 1} de 28`;
+
+// Actualizar alertas
+updateAlerts();
+}
+
+// ================== ALERTAS DE ADHERENCIA ==================
+function updateAlerts() {
+const todayIndex = getDayIndexFromStart();
+const totalCompleted = completedDays.filter(d => d).length;
+
+let consecutivosSinCompletar = 0;
+for (let i = todayIndex; i >= 0; i--) {
+if (!completedDays[i]) consecutivosSinCompletar++;
+else break;
+}
+
+const assistantIcon = document.getElementById('assistantIcon');
+const assistantText = document.getElementById('assistantText');
+const banner = document.getElementById('assistantBanner');
+
+// Si aún no ha completado ningún día, mostrar mensaje de inicio
+if (totalCompleted === 0) {
+assistantIcon.textContent = '🧠';
+assistantText.innerHTML = 'Bienvenida, Eli. Tu sistema de transformación está listo. Marca tu primer día cuando estés lista.';
+banner.style.borderColor = 'rgba(47,106,135,0.3)';
+return;
+}
+
+// Ya ha completado al menos un día → aplicar alertas de adherencia
+if (consecutivosSinCompletar >= 7) {
+assistantIcon.textContent = '🔴';
+assistantText.innerHTML = '<span class="assistant-highlight">Alerta de abandono.</span> 7 días sin actividad. ¿Conversamos para ajustar el plan?';
+banner.style.borderColor = '#ef4444';
+} else if (consecutivosSinCompletar >= 4) {
+assistantIcon.textContent = '⚠️';
+assistantText.innerHTML = 'Estás en <span class="assistant-highlight">zona de riesgo.</span> 4 días sin marcar. ¿Qué podemos hacer distinto?';
+banner.style.borderColor = '#f97316';
+} else if (consecutivosSinCompletar >= 2) {
+assistantIcon.textContent = '💡';
+assistantText.innerHTML = 'Pequeña pausa. <span class="assistant-highlight">2 días sin actividad.</span> ¿Retomamos mañana?';
+banner.style.borderColor = '#eab308';
 } else {
-shareContainer.classList.add('hidden');
+assistantIcon.textContent = '🧠';
+assistantText.innerHTML = 'Estás al día. <span class="assistant-highlight">Buen ritmo, Eli.</span> Sigue construyendo tu racha.';
+banner.style.borderColor = 'rgba(47,106,135,0.3)';
+}
+}
+
+// ================== ACTUALIZACIÓN GENERAL ==================
+function updateAllUI() {
+updateAdherenceScore();
+updateCalendarStates();
+}
+
+// ================== CALENDARIO ==================
+function updateCalendarStates() {
+const todayIndex = getDayIndexFromStart();
+for (let i = 0; i < TOTAL_DAYS; i++) {
+const dayDiv = document.getElementById('day' + i);
+if (!dayDiv) continue;
+const checkbox = document.getElementById('dayCheckbox' + i);
+if (!checkbox) continue;
+
+// Quitar clases anteriores
+dayDiv.classList.remove('state-pending', 'state-completed', 'state-omitted', 'state-unavailable');
+
+if (i > todayIndex) {
+// Día futuro: no disponible aún
+dayDiv.classList.add('state-unavailable');
+checkbox.disabled = true;
+checkbox.checked = false;
+} else if (completedDays[i]) {
+// Día completado
+dayDiv.classList.add('state-completed');
+checkbox.disabled = false;
+checkbox.checked = true;
+} else if (i === todayIndex) {
+// Hoy: pendiente (aún puedes marcarlo)
+dayDiv.classList.add('state-pending');
+checkbox.disabled = false;
+checkbox.checked = false;
+} else {
+// Día pasado no completado: omitido
+dayDiv.classList.add('state-omitted');
+checkbox.disabled = false;
+checkbox.checked = false;
+}
 }
 }
 
@@ -903,54 +908,40 @@ function buildCalendar() {
 const container = document.getElementById('weeksContainer');
 if (!container) return;
 container.innerHTML = '';
+
 for (let w = 0; w < 4; w++) {
 const box = document.createElement('div');
 box.className = 'week-box';
 box.innerHTML = `<h3>Semana ${w + 1}</h3>`;
 const grid = document.createElement('div');
 grid.className = 'calendar';
+
 for (let d = 0; d < 7; d++) {
 const idx = w * 7 + d;
+const dayNumber = idx + 1;
 const dayDiv = document.createElement('div');
 dayDiv.className = 'day';
+dayDiv.id = 'day' + idx;
 dayDiv.innerHTML = `
-<strong>${WEEK_DAYS[d]}</strong>
-<span>${ACTIVITIES[d]}</span>
-<input type="checkbox" id="day${idx}" ${completedDays[idx] ? 'checked' : ''} ${idx > 0 && !completedDays[idx-1] ? 'disabled' : ''}>
+<strong>Día ${dayNumber}</strong>
+<span>${ACTIVITIES[idx]}</span>
+<input type="checkbox" id="dayCheckbox${idx}" ${completedDays[idx] ? 'checked' : ''}>
 `;
 const checkbox = dayDiv.querySelector('input');
 checkbox.addEventListener('change', function() {
 completedDays[idx] = this.checked;
 saveAll();
-updateProgressUI();
-// Habilitar el siguiente día si este se marca
-if (this.checked && idx + 1 < TOTAL_DAYS) {
-const nextCheckbox = document.getElementById('day' + (idx + 1));
-if (nextCheckbox) nextCheckbox.disabled = false;
-}
-// Si se desmarca, deshabilitar todos los siguientes
-if (!this.checked) {
-for (let i = idx + 1; i < TOTAL_DAYS; i++) {
-const nextCheckbox = document.getElementById('day' + i);
-if (nextCheckbox) {
-nextCheckbox.disabled = true;
-if (nextCheckbox.checked) {
-nextCheckbox.checked = false;
-completedDays[i] = false;
-}
-}
-}
-saveAll();
-updateProgressUI();
-}
+updateAllUI();
 });
 grid.appendChild(dayDiv);
 }
 box.appendChild(grid);
 container.appendChild(box);
 }
+updateCalendarStates();
 }
 
+// ================== REGISTRO DE CARGAS ==================
 function buildWorkoutLog(containerId, exercises, videoIds) {
 const container = document.getElementById(containerId);
 if (!container) return;
@@ -960,12 +951,12 @@ const div = document.createElement('div');
 div.className = 'exercise-log';
 const weeks = cargas[ex] || ['', '', '', ''];
 div.innerHTML = `
-<h4>${ex} <button class="video-btn" data-video="${videoIds[i]}">Ver Video</button></h4>
+<h4>${ex} <button class="video-btn" data-video="${videoIds[i]}">▶ Ver Video</button></h4>
 <div class="weeks-inputs">
 ${[1,2,3,4].map(s => `
 <div class="week-input-group">
 <label>Sem ${s}</label>
-<input type="text" class="load-input" data-exercise="${ex}" data-week="${s-1}" value="${weeks[s-1]}" placeholder="kg">
+<input type="text" class="load-input" data-exercise="${ex}" data-week="${s-1}" value="${weeks[s-1]}" placeholder="kg" inputmode="decimal">
 </div>
 `).join('')}
 </div>
@@ -989,36 +980,6 @@ openVideo(videoId);
 });
 });
 }
-
-// ================== COMPARTIR PROGRESO ==================
-function generateShareText() {
-const completed = completedDays.filter(d => d).length;
-const percent = Math.round((completed / TOTAL_DAYS) * 100);
-let text = `📊 *Progreso de Ely - Joseph Antoninos Fitness*\n`;
-text += `━━━━━━━━━━━━━━━━━━━━━━\n`;
-text += `✅ Días completados: ${completed}/28 (${percent}%)\n`;
-text += `📅 Semana actual: ${Math.min(Math.floor(completed / 7) + 1, 4)} de 4\n\n`;
-
-text += `🏋️ *Fuerza A:*\n`;
-exercisesA.forEach(ex => {
-const loads = cargas[ex] || ['-', '-', '-', '-'];
-text += `  • ${ex}: Sem1 ${loads[0] || '-'}kg, Sem2 ${loads[1] || '-'}kg, Sem3 ${loads[2] || '-'}kg, Sem4 ${loads[3] || '-'}kg\n`;
-});
-
-text += `\n🏋️ *Fuerza B:*\n`;
-exercisesB.forEach(ex => {
-const loads = cargas[ex] || ['-', '-', '-', '-'];
-text += `  • ${ex}: Sem1 ${loads[0] || '-'}kg, Sem2 ${loads[1] || '-'}kg, Sem3 ${loads[2] || '-'}kg, Sem4 ${loads[3] || '-'}kg\n`;
-});
-
-return text;
-}
-
-document.getElementById('shareBtn').addEventListener('click', function() {
-const text = generateShareText();
-const encoded = encodeURIComponent(text);
-window.open(`https://wa.me/525531178903?text=${encoded}`, '_blank');
-});
 
 // ================== MODAL VIDEO ==================
 function openVideo(videoId) {
