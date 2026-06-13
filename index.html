@@ -164,7 +164,7 @@ margin-top: 2px;
 text-transform: uppercase;
 }
 
-/* Banner de asistente DeepSeek */
+/* Banner de asistente */
 .assistant-banner {
 margin: 12px 16px;
 padding: 12px 16px;
@@ -556,7 +556,7 @@ border-top: 1px solid #2f6a87;
 
 <!-- Pantalla de bloqueo -->
 <div class="lock-screen" id="lockScreen">
-<div class="lock-logo">JOSEPH ANTONINOS | CLIENT OS 1.0</div>
+<div class="lock-logo">JOSEPH ANTONINOS | CLIENT OS</div>
 <h1>Acceso Privado</h1>
 <h2>Ingresa tu código</h2>
 <input type="password" id="pinInput" class="pin-input" maxlength="4" placeholder="····" inputmode="numeric">
@@ -573,10 +573,16 @@ border-top: 1px solid #2f6a87;
 <span class="dashboard-label">Cliente</span>
 <span class="dashboard-value">Elizabeth</span>
 </div>
+
 <div class="dashboard-item">
 <span class="dashboard-label">Día actual</span>
 <span class="dashboard-value" id="currentDayDisplay">1 de 28</span>
+<div>
+<span class="dashboard-label">Racha 🔥</span>
 </div>
+<span class="dashboard-value" id="streakValue">0</span>
+</div>
+
 <div class="dashboard-item" id="scoreContainer">
 <span class="dashboard-label">Score</span>
 <div class="score-circle" id="scoreCircle">
@@ -584,15 +590,22 @@ border-top: 1px solid #2f6a87;
 </div>
 <span class="score-label" id="scoreLabel">—</span>
 </div>
+
 <div class="dashboard-item">
 <span class="dashboard-label">Próx. revisión</span>
-<span class="dashboard-value" id="reviewDate">15 Julio</span>
+<span class="dashboard-value" id="reviewDate">0</span>
+<div>
 <span class="dashboard-label">Días restantes</span>
-<span class="dashboard-value" id="daysLeft">28</span>
+</div>
+<span class="dashboard-value" id="daysLeft">0</span>
+</div>
+
+<div class="dashboard-item">
+<button id="logoutBtn" style="background: #ea6c36; border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 0.7rem;">Salir</button>
 </div>
 </div>
 
-<!-- Asistente DeepSeek -->
+<!-- Asistente -->
 <div class="assistant-banner" id="assistantBanner">
 <div class="assistant-icon" id="assistantIcon">🧠</div>
 <div class="assistant-text" id="assistantText">
@@ -604,7 +617,7 @@ Bienvenida, Eli. Tu sistema de transformación está listo.
 <section class="hero">
 <div class="hero-content">
 <h1>JOSEPH ANTONINOS</h1>
-<h2>CLIENT OS 1.0</h2>
+<h2>CLIENT OS</h2>
 <p>Sistema de Fuerza y Composición Corporal</p>
 <p style="font-size: 1rem; font-weight: 400;">Hola Eli 👋<br>
 Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y consistencia en 4 semanas. Sin abandonar las actividades que disfrutas.</p>
@@ -741,6 +754,20 @@ pinInput.addEventListener('input', function() {
 pinError.style.display = 'none';
 });
 
+// Cierre de sesión
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+logoutBtn.addEventListener('click', function() {
+// Ocultar contenido principal, mostrar pantalla de bloqueo
+lockScreen.classList.remove('hidden');
+mainContent.classList.remove('visible');
+// Limpiar campo PIN y errores
+pinInput.value = '';
+pinError.style.display = 'none';
+// Los datos en localStorage se mantienen
+});
+}
+
 // ================== DATOS DEL PROGRAMA ==================
 const TOTAL_DAYS = 28;
 const ACTIVITIES = [
@@ -779,6 +806,20 @@ const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 return Math.min(Math.max(diffDays, 0), TOTAL_DAYS - 1);
 }
 
+//Racha en el dashboard
+function getCurrentStreak() {
+let streak = 0;
+const todayIndex = getDayIndexFromStart();
+for (let i = todayIndex; i >= 0; i--) {
+if (completedDays[i]) {
+streak++;
+} else {
+break;
+}
+}
+return streak;
+}
+
 function saveAll() {
 localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
 localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
@@ -807,6 +848,11 @@ const { score, label, color } = getAdherenceScore();
 const circle = document.getElementById('scoreCircle');
 const circleText = document.getElementById('scoreCircleText');
 const scoreLabel = document.getElementById('scoreLabel');
+
+//Racha en el dashboard
+const streak = getCurrentStreak();
+const streakElement = document.getElementById('streakValue');
+if (streakElement) streakElement.textContent = streak;
 
 circle.style.background = `conic-gradient(${color} 0deg ${score * 3.6}deg, #2a2a2a ${score * 3.6}deg 360deg)`;
 circleText.textContent = score + '%';
