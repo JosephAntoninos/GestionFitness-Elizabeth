@@ -6,7 +6,7 @@
 <title>Joseph Antoninos | Client OS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-* {
+*{
 margin: 0;
 padding: 0;
 box-sizing: border-box;
@@ -714,6 +714,7 @@ Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y 
 <!-- Fin main-content -->
 
 <script>
+document.addEventListener('DOMContentLoaded', function() {
 // ================== SISTEMA DE PIN ==================
 const CORRECT_PIN = "2929";
 const lockScreen = document.getElementById('lockScreen');
@@ -722,70 +723,13 @@ const pinInput = document.getElementById('pinInput');
 const pinBtn = document.getElementById('pinBtn');
 const pinError = document.getElementById('pinError');
 
-// ========== COMPROBAR SESIÓN GUARDADA AL INICIAR ==========
-function inicializarSistema() {
-    if (!window.systemInitialized) {
-        initStartDate();
-        buildCalendar();
-        buildWorkoutLog('workoutA', exercisesA, videoIdsA);
-        buildWorkoutLog('workoutB', exercisesB, videoIdsB);
-        updateAllUI();
-        window.systemInitialized = true;
-    }
-}
-
-if (localStorage.getItem('fitnessAuth') === 'true') {
-    lockScreen.classList.add('hidden');
-    mainContent.classList.add('visible');
-    inicializarSistema();
-} else {
-    lockScreen.classList.remove('hidden');
-    mainContent.classList.remove('visible');
-    pinInput.value = '';
-    pinError.style.display = 'none';
-}
-
-function checkPin() {
-    if (pinInput.value === CORRECT_PIN) {
-        localStorage.setItem('fitnessAuth', 'true');
-        lockScreen.classList.add('hidden');
-        mainContent.classList.add('visible');
-        inicializarSistema();
-    } else {
-        pinError.style.display = 'block';
-        pinInput.value = '';
-        pinInput.focus();
-    }
-}
-
-pinBtn.addEventListener('click', checkPin);
-pinInput.addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') checkPin();
-});
-pinInput.addEventListener('input', function() {
-    pinError.style.display = 'none';
-});
-
-// Cierre de sesión
-const logoutBtn = document.getElementById('logoutBtn');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', function() {
-        localStorage.removeItem('fitnessAuth');
-        lockScreen.classList.remove('hidden');
-        mainContent.classList.remove('visible');
-        pinInput.value = '';
-        pinError.style.display = 'none';
-        window.systemInitialized = false; // Permitir reinicializar si vuelve a entrar
-    });
-}
-
 // ================== DATOS DEL PROGRAMA ==================
 const TOTAL_DAYS = 28;
 const ACTIVITIES = [
-    'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
-    'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
-    'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
-    'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso'
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
+'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso'
 ];
 const exercisesA = ['Sentadilla Goblet 3x10', 'Press Banco Mancuernas 3x10', 'Remo 3x10', 'Plancha 3x30 seg'];
 const exercisesB = ['Peso Muerto Rumano 3x10', 'Press Militar 3x10', 'Jalón al Pecho 3x10', 'Pallof Press 3x12'];
@@ -796,268 +740,343 @@ let completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || 
 let cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
 const allExercises = [...exercisesA, ...exercisesB];
 allExercises.forEach(ex => {
-    if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
+if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
 });
 
 let startDate = localStorage.getItem('fitnessStartDate');
+let systemInitialized = false;
+
+// ================== FUNCIONES ==================
 function initStartDate() {
-    if (!startDate) {
-        startDate = new Date().toISOString().split('T')[0];
-        localStorage.setItem('fitnessStartDate', startDate);
-    }
-    updateDateDisplay(); // Actualiza fechas después de definir startDate
+if (!startDate) {
+startDate = new Date().toISOString().split('T')[0];
+localStorage.setItem('fitnessStartDate', startDate);
+}
+updateDateDisplay();
 }
 
 function getDayIndexFromStart() {
-    if (!startDate) return 0;
-    const start = new Date(startDate + 'T00:00:00');
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    const diffTime = today - start;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    return Math.min(Math.max(diffDays, 0), TOTAL_DAYS - 1);
+if (!startDate) return 0;
+const start = new Date(startDate + 'T00:00:00');
+const today = new Date();
+today.setHours(0,0,0,0);
+const diffTime = today - start;
+const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+return Math.min(Math.max(diffDays, 0), TOTAL_DAYS - 1);
 }
 
 function getCurrentStreak() {
-    let streak = 0;
-    const todayIndex = getDayIndexFromStart();
-    for (let i = todayIndex; i >= 0; i--) {
-        if (completedDays[i]) streak++;
-        else break;
-    }
-    return streak;
+let streak = 0;
+const todayIndex = getDayIndexFromStart();
+for (let i = todayIndex; i >= 0; i--) {
+if (completedDays[i]) streak++;
+else break;
+}
+return streak;
 }
 
 function saveAll() {
-    localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
-    localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
+localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
+localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
 }
 
-// ================== SCORE Y FECHAS ==================
 function getAvailableDaysCount() {
-    const todayIndex = getDayIndexFromStart();
-    return todayIndex + 1;
+return getDayIndexFromStart() + 1;
 }
 
 function getAdherenceScore() {
-    const available = getAvailableDaysCount();
-    const completed = completedDays.slice(0, available).filter(d => d).length;
-    const pct = available === 0 ? 0 : Math.round((completed / available) * 100);
-    let label, color;
-    if (pct >= 90) { label = '🏆 Excelente 🏆'; color = '#22c55e'; }
-    else if (pct >= 75) { label = '🥳 Bueno 🥳'; color = '#eab308'; }
-    else if (pct >= 50) { label = '⚠️ Riesgo ⚠️'; color = '#f97316'; }
-    else { label = '🚨 Crítico 🚨'; color = '#ef4444'; }
-    return { score: pct, label, color };
+const available = getAvailableDaysCount();
+const completed = completedDays.slice(0, available).filter(d => d).length;
+const pct = available === 0 ? 0 : Math.round((completed / available) * 100);
+let label, color;
+if (pct >= 90) { label = '🏆 Excelente 🏆'; color = '#22c55e'; }
+else if (pct >= 75) { label = '🥳 Bueno 🥳'; color = '#eab308'; }
+else if (pct >= 50) { label = '⚠️ Riesgo ⚠️'; color = '#f97316'; }
+else { label = '🚨 Crítico 🚨'; color = '#ef4444'; }
+return { score: pct, label, color };
 }
 
 function updateDateDisplay() {
-    if (!startDate) return;
-    const start = new Date(startDate + 'T00:00:00');
-    const end = new Date(start);
-    end.setDate(end.getDate() + TOTAL_DAYS);
-    const options = { day: 'numeric', month: 'long' };
-    document.getElementById('reviewDate').textContent = end.toLocaleDateString('es-ES', options);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const daysLeft = Math.max(0, Math.ceil((end - today) / (1000 * 60 * 60 * 24)));
-    document.getElementById('daysLeft').textContent = daysLeft;
+if (!startDate) return;
+const start = new Date(startDate + 'T00:00:00');
+const end = new Date(start);
+end.setDate(end.getDate() + TOTAL_DAYS);
+const options = { day: 'numeric', month: 'long' };
+const reviewEl = document.getElementById('reviewDate');
+if (reviewEl) reviewEl.textContent = end.toLocaleDateString('es-ES', options);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const daysLeft = Math.max(0, Math.ceil((end - today) / (1000 * 60 * 60 * 24)));
+const daysLeftEl = document.getElementById('daysLeft');
+if (daysLeftEl) daysLeftEl.textContent = daysLeft;
 }
 
-function updateAdherenceScore() {
-    const { score, label, color } = getAdherenceScore();
-    const circle = document.getElementById('scoreCircle');
-    const circleText = document.getElementById('scoreCircleText');
-    const scoreLabel = document.getElementById('scoreLabel');
-    const streak = getCurrentStreak();
-    const streakElement = document.getElementById('streakValue');
-    if (streakElement) streakElement.textContent = streak;
-    circle.style.background = `conic-gradient(${color} 0deg ${score * 3.6}deg, #2a2a2a ${score * 3.6}deg 360deg)`;
-    circleText.textContent = score + '%';
-    scoreLabel.textContent = label;
-    scoreLabel.style.color = color;
-    const todayIndex = getDayIndexFromStart();
-    document.getElementById('currentDayDisplay').textContent = `Día ${todayIndex + 1} de 28`;
-    updateDateDisplay();  // Actualiza fechas dinámicamente
-    updateAlerts();
-}
-
-// ================== ALERTAS ==================
 function updateAlerts() {
-    const todayIndex = getDayIndexFromStart();
-    const totalCompleted = completedDays.filter(d => d).length;
-    let consecutivosSinCompletar = 0;
-    for (let i = todayIndex; i >= 0; i--) {
-        if (!completedDays[i]) consecutivosSinCompletar++;
-        else break;
-    }
-    const assistantIcon = document.getElementById('assistantIcon');
-    const assistantText = document.getElementById('assistantText');
-    const banner = document.getElementById('assistantBanner');
-    if (totalCompleted === 0) {
-        assistantIcon.textContent = '🧠';
-        assistantText.innerHTML = 'Bienvenida, Eli. Tu sistema de transformación está listo. Marca tu primer día cuando estés lista.';
-        banner.style.borderColor = 'rgba(47,106,135,0.3)';
-        return;
-    }
-    if (consecutivosSinCompletar >= 7) {
-        assistantIcon.textContent = '🔴';
-        assistantText.innerHTML = '<span class="assistant-highlight">Alerta de abandono.</span> 7 días sin actividad. ¿Conversamos para ajustar el plan?';
-        banner.style.borderColor = '#ef4444';
-    } else if (consecutivosSinCompletar >= 4) {
-        assistantIcon.textContent = '⚠️';
-        assistantText.innerHTML = 'Estás en <span class="assistant-highlight">zona de riesgo.</span> 4 días sin marcar. ¿Qué podemos hacer distinto?';
-        banner.style.borderColor = '#f97316';
-    } else if (consecutivosSinCompletar >= 2) {
-        assistantIcon.textContent = '💡';
-        assistantText.innerHTML = 'Pequeña pausa. <span class="assistant-highlight">2 días sin actividad.</span> ¿Retomamos mañana?';
-        banner.style.borderColor = '#eab308';
-    } else {
-        assistantIcon.textContent = '🧠';
-        assistantText.innerHTML = 'Estás al día. <span class="assistant-highlight">Buen ritmo, Eli.</span> Sigue construyendo tu racha.';
-        banner.style.borderColor = 'rgba(47,106,135,0.3)';
-    }
+const todayIndex = getDayIndexFromStart();
+const totalCompleted = completedDays.filter(d => d).length;
+let consecutivosSinCompletar = 0;
+for (let i = todayIndex; i >= 0; i--) {
+if (!completedDays[i]) consecutivosSinCompletar++;
+else break;
+}
+const assistantIcon = document.getElementById('assistantIcon');
+const assistantText = document.getElementById('assistantText');
+const banner = document.getElementById('assistantBanner');
+if (!assistantIcon || !assistantText || !banner) return;
+if (totalCompleted === 0) {
+assistantIcon.textContent = '🧠';
+assistantText.innerHTML = 'Bienvenida, Eli. Tu sistema de transformación está listo. Marca tu primer día cuando estés lista.';
+banner.style.borderColor = 'rgba(47,106,135,0.3)';
+return;
+}
+if (consecutivosSinCompletar >= 7) {
+assistantIcon.textContent = '🔴';
+assistantText.innerHTML = '<span class="assistant-highlight">Alerta de abandono.</span> 7 días sin actividad. ¿Conversamos para ajustar el plan?';
+banner.style.borderColor = '#ef4444';
+} else if (consecutivosSinCompletar >= 4) {
+assistantIcon.textContent = '⚠️';
+assistantText.innerHTML = 'Estás en <span class="assistant-highlight">zona de riesgo.</span> 4 días sin marcar. ¿Qué podemos hacer distinto?';
+banner.style.borderColor = '#f97316';
+} else if (consecutivosSinCompletar >= 2) {
+assistantIcon.textContent = '💡';
+assistantText.innerHTML = 'Pequeña pausa. <span class="assistant-highlight">2 días sin actividad.</span> ¿Retomamos mañana?';
+banner.style.borderColor = '#eab308';
+} else {
+assistantIcon.textContent = '🧠';
+assistantText.innerHTML = 'Estás al día. <span class="assistant-highlight">Buen ritmo, Eli.</span> Sigue construyendo tu racha.';
+banner.style.borderColor = 'rgba(47,106,135,0.3)';
+}
 }
 
-function updateAllUI() {
-    updateAdherenceScore();
-    updateCalendarStates();
-}
-
-// ================== CALENDARIO ==================
 function updateCalendarStates() {
-    const todayIndex = getDayIndexFromStart();
-    for (let i = 0; i < TOTAL_DAYS; i++) {
-        const dayDiv = document.getElementById('day' + i);
-        if (!dayDiv) continue;
-        const checkbox = document.getElementById('dayCheckbox' + i);
-        if (!checkbox) continue;
-        dayDiv.classList.remove('state-pending', 'state-completed', 'state-omitted', 'state-unavailable');
-        if (i > todayIndex) {
-            dayDiv.classList.add('state-unavailable');
-            checkbox.disabled = true;
-            checkbox.checked = false;
-        } else if (completedDays[i]) {
-            dayDiv.classList.add('state-completed');
-            checkbox.disabled = false;
-            checkbox.checked = true;
-        } else if (i === todayIndex) {
-            dayDiv.classList.add('state-pending');
-            checkbox.disabled = false;
-            checkbox.checked = false;
-        } else {
-            dayDiv.classList.add('state-omitted');
-            checkbox.disabled = false;
-            checkbox.checked = false;
-        }
-    }
+const todayIndex = getDayIndexFromStart();
+for (let i = 0; i < TOTAL_DAYS; i++) {
+const dayDiv = document.getElementById('day' + i);
+if (!dayDiv) continue;
+const checkbox = document.getElementById('dayCheckbox' + i);
+if (!checkbox) continue;
+dayDiv.classList.remove('state-pending', 'state-completed', 'state-omitted', 'state-unavailable');
+if (i > todayIndex) {
+dayDiv.classList.add('state-unavailable');
+checkbox.disabled = true;
+checkbox.checked = false;
+} else if (completedDays[i]) {
+dayDiv.classList.add('state-completed');
+checkbox.disabled = false;
+checkbox.checked = true;
+} else if (i === todayIndex) {
+dayDiv.classList.add('state-pending');
+checkbox.disabled = false;
+checkbox.checked = false;
+} else {
+dayDiv.classList.add('state-omitted');
+checkbox.disabled = false;
+checkbox.checked = false;
+}
+}
 }
 
 function buildCalendar() {
-    const container = document.getElementById('weeksContainer');
-    if (!container) return;
-    container.innerHTML = '';
-    for (let w = 0; w < 4; w++) {
-        const box = document.createElement('div');
-        box.className = 'week-box';
-        box.innerHTML = `<h3>Semana ${w + 1}</h3>`;
-        const grid = document.createElement('div');
-        grid.className = 'calendar';
-        for (let d = 0; d < 7; d++) {
-            const idx = w * 7 + d;
-            const dayNumber = idx + 1;
-            const dayDiv = document.createElement('div');
-            dayDiv.className = 'day';
-            dayDiv.id = 'day' + idx;
-            dayDiv.innerHTML = `
-                <strong>Día ${dayNumber}</strong>
-                <span>${ACTIVITIES[idx]}</span>
-                <input type="checkbox" id="dayCheckbox${idx}" ${completedDays[idx] ? 'checked' : ''}>
-            `;
-            const checkbox = dayDiv.querySelector('input');
-            checkbox.addEventListener('change', function() {
-                completedDays[idx] = this.checked;
-                saveAll();
-                updateAllUI();
-            });
-            grid.appendChild(dayDiv);
-        }
-        box.appendChild(grid);
-        container.appendChild(box);
-    }
-    updateCalendarStates();
-}
-
-// ================== REGISTRO DE CARGAS ==================
-function buildWorkoutLog(containerId, exercises, videoIds) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    container.innerHTML = '';
-    exercises.forEach((ex, i) => {
-        const div = document.createElement('div');
-        div.className = 'exercise-log';
-        const weeks = cargas[ex] || ['', '', '', ''];
-        div.innerHTML = `
-            <h4>${ex} <button class="video-btn" data-video="${videoIds[i]}">▶ Ver Video</button></h4>
-            <div class="weeks-inputs">
-                ${[1,2,3,4].map(s => `
-                    <div class="week-input-group">
-                        <label>Sem ${s}</label>
-                        <div style="display: flex; align-items: center; gap: 2px;">
-                            <input type="number" step="0.5" class="load-input" data-exercise="${ex}" data-week="${s-1}" value="${weeks[s-1]}" placeholder="0" style="width: 70px; text-align: center;">
-                            <span style="font-size:0.7rem;">kg</span>
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-        container.appendChild(div);
-    });
-    document.querySelectorAll('.load-input').forEach(input => {
-        input.addEventListener('change', function() {
-            let val = this.value.trim();
-            if (val === "") {
-                // vacío permitido
-            } else {
-                let num = parseFloat(val);
-                if (isNaN(num)) {
-                    const ex = this.dataset.exercise;
-                    const weekIdx = parseInt(this.dataset.week);
-                    this.value = cargas[ex][weekIdx] || '';
-                    return;
-                }
-                this.value = num;
-            }
-            const ex = this.dataset.exercise;
-            const weekIdx = parseInt(this.dataset.week);
-            cargas[ex][weekIdx] = this.value;
-            saveAll();
-        });
-    });
-    document.querySelectorAll('.video-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const videoId = this.dataset.video;
-            openVideo(videoId);
-        });
-    });
-}
-
-// ================== MODAL VIDEO ==================
-function openVideo(videoId) {
-    const iframe = document.getElementById('youtubeFrame');
-    iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`;
-    document.getElementById('videoModal').style.display = 'flex';
-}
-function closeVideo() {
-    document.getElementById('youtubeFrame').src = '';
-    document.getElementById('videoModal').style.display = 'none';
-}
-document.getElementById('videoModal').addEventListener('click', function(e) {
-    if (e.target === this) closeVideo();
+const container = document.getElementById('weeksContainer');
+if (!container) return;
+container.innerHTML = '';
+for (let w = 0; w < 4; w++) {
+const box = document.createElement('div');
+box.className = 'week-box';
+box.innerHTML = `<h3>Semana ${w + 1}</h3>`;
+const grid = document.createElement('div');
+grid.className = 'calendar';
+for (let d = 0; d < 7; d++) {
+const idx = w * 7 + d;
+const dayNumber = idx + 1;
+const dayDiv = document.createElement('div');
+dayDiv.className = 'day';
+dayDiv.id = 'day' + idx;
+dayDiv.innerHTML = `
+<strong>Día ${dayNumber}</strong>
+<span>${ACTIVITIES[idx]}</span>
+<input type="checkbox" id="dayCheckbox${idx}" ${completedDays[idx] ? 'checked' : ''}>
+`;
+const checkbox = dayDiv.querySelector('input');
+checkbox.addEventListener('change', function() {
+completedDays[idx] = this.checked;
+saveAll();
+updateAllUI();
 });
+grid.appendChild(dayDiv);
+}
+box.appendChild(grid);
+container.appendChild(box);
+}
+updateCalendarStates();
+}
 
-window.systemInitialized = false;
+function buildWorkoutLog(containerId, exercises, videoIds) {
+const container = document.getElementById(containerId);
+if (!container) return;
+container.innerHTML = '';
+exercises.forEach((ex, i) => {
+const div = document.createElement('div');
+div.className = 'exercise-log';
+const weeks = cargas[ex] || ['', '', '', ''];
+div.innerHTML = `
+<h4>${ex} <button class="video-btn" data-video="${videoIds[i]}">▶ Ver Video</button></h4>
+<div class="weeks-inputs">
+${[1,2,3,4].map(s => `
+<div class="week-input-group">
+<label>Sem ${s}</label>
+<div style="display: flex; align-items: center; gap: 2px;">
+<input type="number" step="0.5" class="load-input" data-exercise="${ex}" data-week="${s-1}" value="${weeks[s-1]}" placeholder="0" style="width: 70px; text-align: center;">
+<span style="font-size:0.7rem;">kg</span>
+</div>
+</div>
+`).join('')}
+</div>
+`;
+container.appendChild(div);
+});
+document.querySelectorAll('.load-input').forEach(input => {
+input.addEventListener('change', function() {
+let val = this.value.trim();
+if (val === "") {
+// vacío permitido
+} else {
+let num = parseFloat(val);
+if (isNaN(num)) {
+const ex = this.dataset.exercise;
+const weekIdx = parseInt(this.dataset.week);
+this.value = cargas[ex][weekIdx] || '';
+return;
+}
+this.value = num;
+}
+const ex = this.dataset.exercise;
+const weekIdx = parseInt(this.dataset.week);
+cargas[ex][weekIdx] = this.value;
+saveAll();
+});
+});
+document.querySelectorAll('.video-btn').forEach(btn => {
+btn.addEventListener('click', function() {
+const videoId = this.dataset.video;
+openVideo(videoId);
+});
+});
+}
+
+function updateAdherenceScore() {
+const { score, label, color } = getAdherenceScore();
+const circle = document.getElementById('scoreCircle');
+const circleText = document.getElementById('scoreCircleText');
+const scoreLabel = document.getElementById('scoreLabel');
+const streak = getCurrentStreak();
+const streakElement = document.getElementById('streakValue');
+if (streakElement) streakElement.textContent = streak;
+if (circle && circleText) {
+circle.style.background = `conic-gradient(${color} 0deg ${score * 3.6}deg, #2a2a2a ${score * 3.6}deg 360deg)`;
+circleText.textContent = score + '%';
+}
+if (scoreLabel) {
+scoreLabel.textContent = label;
+scoreLabel.style.color = color;
+}
+const todayIndex = getDayIndexFromStart();
+const currentDayEl = document.getElementById('currentDayDisplay');
+if (currentDayEl) currentDayEl.textContent = `Día ${todayIndex + 1} de 28`;
+updateDateDisplay();
+updateAlerts();
+}
+
+function updateAllUI() {
+updateAdherenceScore();
+updateCalendarStates();
+}
+
+function openVideo(videoId) {
+const iframe = document.getElementById('youtubeFrame');
+if (iframe) iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`;
+const modal = document.getElementById('videoModal');
+if (modal) modal.style.display = 'flex';
+}
+
+function closeVideo() {
+const iframe = document.getElementById('youtubeFrame');
+if (iframe) iframe.src = '';
+const modal = document.getElementById('videoModal');
+if (modal) modal.style.display = 'none';
+}
+
+// Modal close handler
+const modal = document.getElementById('videoModal');
+if (modal) {
+modal.addEventListener('click', function(e) {
+if (e.target === this) closeVideo();
+});
+}
+
+// ================== INICIALIZACIÓN DEL SISTEMA ==================
+function inicializarSistema() {
+if (systemInitialized) return;
+initStartDate();
+buildCalendar();
+buildWorkoutLog('workoutA', exercisesA, videoIdsA);
+buildWorkoutLog('workoutB', exercisesB, videoIdsB);
+updateAllUI();
+systemInitialized = true;
+}
+
+// ================== COMPROBAR SESIÓN ==================
+if (localStorage.getItem('fitnessAuth') === 'true') {
+lockScreen.classList.add('hidden');
+mainContent.classList.add('visible');
+inicializarSistema();
+} else {
+lockScreen.classList.remove('hidden');
+mainContent.classList.remove('visible');
+if (pinInput) pinInput.value = '';
+if (pinError) pinError.style.display = 'none';
+}
+
+// ================== EVENTOS PIN ==================
+function checkPin() {
+if (pinInput.value === CORRECT_PIN) {
+localStorage.setItem('fitnessAuth', 'true');
+lockScreen.classList.add('hidden');
+mainContent.classList.add('visible');
+inicializarSistema();
+} else {
+if (pinError) pinError.style.display = 'block';
+if (pinInput) {
+pinInput.value = '';
+pinInput.focus();
+}
+}
+}
+
+if (pinBtn) pinBtn.addEventListener('click', checkPin);
+if (pinInput) {
+pinInput.addEventListener('keypress', function(e) {
+if (e.key === 'Enter') checkPin();
+});
+pinInput.addEventListener('input', function() {
+if (pinError) pinError.style.display = 'none';
+});
+}
+
+// ================== CIERRE DE SESIÓN ==================
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+logoutBtn.addEventListener('click', function() {
+localStorage.removeItem('fitnessAuth');
+lockScreen.classList.remove('hidden');
+mainContent.classList.remove('visible');
+if (pinInput) pinInput.value = '';
+if (pinError) pinError.style.display = 'none';
+systemInitialized = false; // Permite reinicializar si vuelve a entrar
+});
+}
+});
 </script>
-  
+
 </body>
 </html>
