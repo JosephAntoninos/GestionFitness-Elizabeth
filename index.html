@@ -12,7 +12,9 @@ padding: 0;
 box-sizing: border-box;
 font-family: 'Inter', sans-serif;
 }
-
+html {
+scroll-behavior: smooth;
+}
 body {
 background: #0f0f0f;
 color: #e7e7e7;
@@ -130,6 +132,7 @@ font-size: 1rem;
 font-weight: 700;
 color: #e7e7e7;
 }
+
 /* Círculo de Score */
 .score-circle {
 width: 60px;
@@ -532,9 +535,7 @@ border-top: 1px solid #2f6a87;
 }
 .footer h2 { color: #e7e7e7; font-size: 1.3rem; }
 .footer p { color: #6eb2cc; max-width: 500px; margin: 10px auto 0; font-size: 0.9rem; }
-
 .hidden { display: none !important; }
-
 @media (max-width: 480px) {
 .dashboard { padding: 12px 8px; gap: 8px; }
 .dashboard-item { min-width: 50px; }
@@ -572,18 +573,13 @@ border-top: 1px solid #2f6a87;
 <div class="dashboard-item">
 <span class="dashboard-label">Cliente</span>
 <span class="dashboard-value">Elizabeth</span>
-<div class="dashboard-item">
 <button id="logoutBtn" style="background: #ea6c36; border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 0.7rem;">Salir</button>
 </div>
-</div>
-
 
 <div class="dashboard-item">
 <span class="dashboard-label">Día actual</span>
 <span class="dashboard-value" id="currentDayDisplay">1 de 28</span>
-<div>
 <span class="dashboard-label">Racha 🔥</span>
-</div>
 <span class="dashboard-value" id="streakValue">0</span>
 </div>
 
@@ -598,9 +594,7 @@ border-top: 1px solid #2f6a87;
 <div class="dashboard-item">
 <span class="dashboard-label">Próx. revisión</span>
 <span class="dashboard-value" id="reviewDate">0</span>
-<div>
 <span class="dashboard-label">Días restantes</span>
-</div>
 <span class="dashboard-value" id="daysLeft">0</span>
 </div>
 </div>
@@ -716,7 +710,8 @@ Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y 
 </div>
 </div>
 
-</div><!-- Fin main-content -->
+</div>
+<!-- Fin main-content -->
 
 <script>
 // ================== SISTEMA DE PIN ==================
@@ -727,8 +722,28 @@ const pinInput = document.getElementById('pinInput');
 const pinBtn = document.getElementById('pinBtn');
 const pinError = document.getElementById('pinError');
 
+// ========== COMPROBAR SESIÓN GUARDADA AL INICIAR ==========
+if (localStorage.getItem('fitnessAuth') === 'true') {
+lockScreen.classList.add('hidden');
+mainContent.classList.add('visible');
+if (!window.systemInitialized) {
+initStartDate();
+buildCalendar();
+buildWorkoutLog('workoutA', exercisesA, videoIdsA);
+buildWorkoutLog('workoutB', exercisesB, videoIdsB);
+updateAllUI();
+window.systemInitialized = true;
+}
+} else {
+lockScreen.classList.remove('hidden');
+mainContent.classList.remove('visible');
+pinInput.value = '';
+pinError.style.display = 'none';
+}
+
 function checkPin() {
 if (pinInput.value === CORRECT_PIN) {
+localStorage.setItem('fitnessAuth', 'true');
 lockScreen.classList.add('hidden');
 mainContent.classList.add('visible');
 if (!window.systemInitialized) {
@@ -758,13 +773,11 @@ pinError.style.display = 'none';
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
 logoutBtn.addEventListener('click', function() {
-// Ocultar contenido principal, mostrar pantalla de bloqueo
+localStorage.removeItem('fitnessAuth');
 lockScreen.classList.remove('hidden');
 mainContent.classList.remove('visible');
-// Limpiar campo PIN y errores
 pinInput.value = '';
 pinError.style.display = 'none';
-// Los datos en localStorage se mantienen
 });
 }
 
@@ -776,7 +789,6 @@ const ACTIVITIES = [
 'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
 'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso'
 ];
-
 const exercisesA = ['Sentadilla Goblet 3x10', 'Press Banco Mancuernas 3x10', 'Remo 3x10', 'Plancha 3x30 seg'];
 const exercisesB = ['Peso Muerto Rumano 3x10', 'Press Militar 3x10', 'Jalón al Pecho 3x10', 'Pallof Press 3x12'];
 const videoIdsA = ['F3-DxxLNrqw', '48L0oQApm_0', '2z3tI5c7Oc8', '3AM7L2k7BEw'];
@@ -789,15 +801,17 @@ allExercises.forEach(ex => {
 if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
 });
 
-// Fecha de inicio
 let startDate = localStorage.getItem('fitnessStartDate');
 function initStartDate() {
 if (!startDate) {
 startDate = new Date().toISOString().split('T')[0];
 localStorage.setItem('fitnessStartDate', startDate);
 }
+updateDateDisplay(); // Actualiza fechas después de definir startDate
 }
+
 function getDayIndexFromStart() {
+if (!startDate) return 0;
 const start = new Date(startDate + 'T00:00:00');
 const today = new Date();
 today.setHours(0,0,0,0);
@@ -806,16 +820,12 @@ const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 return Math.min(Math.max(diffDays, 0), TOTAL_DAYS - 1);
 }
 
-//Racha en el dashboard
 function getCurrentStreak() {
 let streak = 0;
 const todayIndex = getDayIndexFromStart();
 for (let i = todayIndex; i >= 0; i--) {
-if (completedDays[i]) {
-streak++;
-} else {
-break;
-}
+if (completedDays[i]) streak++;
+else break;
 }
 return streak;
 }
@@ -825,10 +835,10 @@ localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
 localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
 }
 
-// ================== SCORE DE ADHERENCIA (sobre días disponibles) ==================
+// ================== SCORE DE ADHERENCIA ==================
 function getAvailableDaysCount() {
 const todayIndex = getDayIndexFromStart();
-return todayIndex + 1; // días 0..todayIndex inclusive
+return todayIndex + 1;
 }
 
 function getAdherenceScore() {
@@ -836,11 +846,24 @@ const available = getAvailableDaysCount();
 const completed = completedDays.slice(0, available).filter(d => d).length;
 const pct = available === 0 ? 0 : Math.round((completed / available) * 100);
 let label, color;
-if (pct >= 90) { label = 'Excelente'; color = '#22c55e'; }
-else if (pct >= 75) { label = 'Bueno'; color = '#eab308'; }
-else if (pct >= 50) { label = 'Riesgo'; color = '#f97316'; }
-else { label = 'Crítico'; color = '#ef4444'; }
+if (pct >= 90) { label = '🏆 Excelente 🏆'; color = '#22c55e'; }
+else if (pct >= 75) { label = '🥳 Bueno 🥳'; color = '#eab308'; }
+else if (pct >= 50) { label = '⚠️ Riesgo ⚠️'; color = '#f97316'; }
+else { label = '🚨 Crítico 🚨'; color = '#ef4444'; }
 return { score: pct, label, color };
+}
+
+function updateDateDisplay() {
+if (!startDate) return;
+const start = new Date(startDate + 'T00:00:00');
+const end = new Date(start);
+end.setDate(end.getDate() + TOTAL_DAYS);
+const options = { day: 'numeric', month: 'long' };
+document.getElementById('reviewDate').textContent = end.toLocaleDateString('es-ES', options);
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+const daysLeft = Math.max(0, Math.ceil((end - today) / (1000 * 60 * 60 * 24)));
+document.getElementById('daysLeft').textContent = daysLeft;
 }
 
 function updateAdherenceScore() {
@@ -848,22 +871,16 @@ const { score, label, color } = getAdherenceScore();
 const circle = document.getElementById('scoreCircle');
 const circleText = document.getElementById('scoreCircleText');
 const scoreLabel = document.getElementById('scoreLabel');
-
-//Racha en el dashboard
 const streak = getCurrentStreak();
 const streakElement = document.getElementById('streakValue');
 if (streakElement) streakElement.textContent = streak;
-
 circle.style.background = `conic-gradient(${color} 0deg ${score * 3.6}deg, #2a2a2a ${score * 3.6}deg 360deg)`;
 circleText.textContent = score + '%';
 scoreLabel.textContent = label;
 scoreLabel.style.color = color;
-
-// Actualizar día actual en dashboard
 const todayIndex = getDayIndexFromStart();
 document.getElementById('currentDayDisplay').textContent = `Día ${todayIndex + 1} de 28`;
-
-// Actualizar alertas
+updateDateDisplay();  // Actualiza fechas cada vez que se marca un día o se recarga
 updateAlerts();
 }
 
@@ -871,26 +888,20 @@ updateAlerts();
 function updateAlerts() {
 const todayIndex = getDayIndexFromStart();
 const totalCompleted = completedDays.filter(d => d).length;
-
 let consecutivosSinCompletar = 0;
 for (let i = todayIndex; i >= 0; i--) {
 if (!completedDays[i]) consecutivosSinCompletar++;
 else break;
 }
-
 const assistantIcon = document.getElementById('assistantIcon');
 const assistantText = document.getElementById('assistantText');
 const banner = document.getElementById('assistantBanner');
-
-// Si aún no ha completado ningún día, mostrar mensaje de inicio
 if (totalCompleted === 0) {
 assistantIcon.textContent = '🧠';
 assistantText.innerHTML = 'Bienvenida, Eli. Tu sistema de transformación está listo. Marca tu primer día cuando estés lista.';
 banner.style.borderColor = 'rgba(47,106,135,0.3)';
 return;
 }
-
-// Ya ha completado al menos un día → aplicar alertas de adherencia
 if (consecutivosSinCompletar >= 7) {
 assistantIcon.textContent = '🔴';
 assistantText.innerHTML = '<span class="assistant-highlight">Alerta de abandono.</span> 7 días sin actividad. ¿Conversamos para ajustar el plan?';
@@ -910,7 +921,6 @@ banner.style.borderColor = 'rgba(47,106,135,0.3)';
 }
 }
 
-// ================== ACTUALIZACIÓN GENERAL ==================
 function updateAllUI() {
 updateAdherenceScore();
 updateCalendarStates();
@@ -924,27 +934,20 @@ const dayDiv = document.getElementById('day' + i);
 if (!dayDiv) continue;
 const checkbox = document.getElementById('dayCheckbox' + i);
 if (!checkbox) continue;
-
-// Quitar clases anteriores
 dayDiv.classList.remove('state-pending', 'state-completed', 'state-omitted', 'state-unavailable');
-
 if (i > todayIndex) {
-// Día futuro: no disponible aún
 dayDiv.classList.add('state-unavailable');
 checkbox.disabled = true;
 checkbox.checked = false;
 } else if (completedDays[i]) {
-// Día completado
 dayDiv.classList.add('state-completed');
 checkbox.disabled = false;
 checkbox.checked = true;
 } else if (i === todayIndex) {
-// Hoy: pendiente (aún puedes marcarlo)
 dayDiv.classList.add('state-pending');
 checkbox.disabled = false;
 checkbox.checked = false;
 } else {
-// Día pasado no completado: omitido
 dayDiv.classList.add('state-omitted');
 checkbox.disabled = false;
 checkbox.checked = false;
@@ -956,14 +959,12 @@ function buildCalendar() {
 const container = document.getElementById('weeksContainer');
 if (!container) return;
 container.innerHTML = '';
-
 for (let w = 0; w < 4; w++) {
 const box = document.createElement('div');
 box.className = 'week-box';
 box.innerHTML = `<h3>Semana ${w + 1}</h3>`;
 const grid = document.createElement('div');
 grid.className = 'calendar';
-
 for (let d = 0; d < 7; d++) {
 const idx = w * 7 + d;
 const dayNumber = idx + 1;
@@ -1014,22 +1015,20 @@ ${[1,2,3,4].map(s => `
 `;
 container.appendChild(div);
 });
-
 document.querySelectorAll('.load-input').forEach(input => {
 input.addEventListener('change', function() {
 let val = this.value.trim();
 if (val === "") {
-// Vacío se guarda como vacío
+// vacío permitido
 } else {
 let num = parseFloat(val);
 if (isNaN(num)) {
-// Si no es número, resetea al valor anterior
 const ex = this.dataset.exercise;
 const weekIdx = parseInt(this.dataset.week);
 this.value = cargas[ex][weekIdx] || '';
 return;
 }
-this.value = num; // Normaliza (ej. "5.0" -> 5)
+this.value = num;
 }
 const ex = this.dataset.exercise;
 const weekIdx = parseInt(this.dataset.week);
@@ -1037,7 +1036,6 @@ cargas[ex][weekIdx] = this.value;
 saveAll();
 });
 });
-
 document.querySelectorAll('.video-btn').forEach(btn => {
 btn.addEventListener('click', function() {
 const videoId = this.dataset.video;
@@ -1052,31 +1050,16 @@ const iframe = document.getElementById('youtubeFrame');
 iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`;
 document.getElementById('videoModal').style.display = 'flex';
 }
-
 function closeVideo() {
 document.getElementById('youtubeFrame').src = '';
 document.getElementById('videoModal').style.display = 'none';
 }
-
 document.getElementById('videoModal').addEventListener('click', function(e) {
 if (e.target === this) closeVideo();
 });
 
-// Calcular fecha de fin (startDate + TOTAL_DAYS)
-const start = new Date(startDate + 'T00:00:00');
-const end = new Date(start);
-end.setDate(end.getDate() + TOTAL_DAYS);
-const options = { day: 'numeric', month: 'long' };
-const endDateString = end.toLocaleDateString('es-ES', options);
-document.getElementById('reviewDate').textContent = endDateString;
-
-// Calcular días restantes
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-const daysLeft = Math.max(0, Math.ceil((end - today) / (1000 * 60 * 60 * 24)));
-document.getElementById('daysLeft').textContent = daysLeft;
-
 window.systemInitialized = false;
 </script>
+
 </body>
 </html>
