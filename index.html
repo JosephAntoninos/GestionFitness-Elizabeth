@@ -714,6 +714,14 @@ Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y 
 <!-- Fin main-content -->
 
 <script>
+
+function closeVideo() {
+const iframe = document.getElementById('youtubeFrame');
+if (iframe) iframe.src = '';
+const modal = document.getElementById('videoModal');
+if (modal) modal.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', function() {
 // ================== SISTEMA DE PIN ==================
 const CORRECT_PIN = "2929";
@@ -997,13 +1005,6 @@ const iframe = document.getElementById('youtubeFrame');
 if (iframe) iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`;
 const modal = document.getElementById('videoModal');
 if (modal) modal.style.display = 'flex';
-}
-
-function closeVideo() {
-const iframe = document.getElementById('youtubeFrame');
-if (iframe) iframe.src = '';
-const modal = document.getElementById('videoModal');
-if (modal) modal.style.display = 'none';
 }
 
 // Modal close handler
