@@ -551,6 +551,25 @@ border-top: 1px solid #2f6a87;
 .day strong { font-size: 0.7rem; }
 .day span { font-size: 0.65rem; }
 }
+
+/* Botón inline dentro del banner del asistente */
+.ajuste-btn-inline {
+display: inline-block;
+background: #ea6c36;
+color: white;
+border: none;
+padding: 6px 14px;
+border-radius: 30px;
+font-size: 0.75rem;
+font-weight: 600;
+cursor: pointer;
+transition: all 0.3s ease;
+width: auto;
+}
+.ajuste-btn-inline:hover {
+background: #9a5131;
+transform: translateY(-1px);
+}
 </style>
 </head>
 <body>
@@ -827,32 +846,69 @@ for (let i = todayIndex; i >= 0; i--) {
 if (!completedDays[i]) consecutivosSinCompletar++;
 else break;
 }
+
 const assistantIcon = document.getElementById('assistantIcon');
 const assistantText = document.getElementById('assistantText');
 const banner = document.getElementById('assistantBanner');
+
 if (!assistantIcon || !assistantText || !banner) return;
+
+let icono = '🧠';
+let mensaje = '';
+let mostrarBoton = false;
+let textoBoton = '';
+
 if (totalCompleted === 0) {
-assistantIcon.textContent = '🧠';
-assistantText.innerHTML = 'Bienvenida, Eli. Tu sistema de transformación está listo. Marca tu primer día cuando estés lista.';
+icono = '🧠';
+mensaje = 'Bienvenida, Eli. Tu sistema de transformación está listo. Marca tu primer día cuando estés lista.';
+mostrarBoton = false;
 banner.style.borderColor = 'rgba(47,106,135,0.3)';
-return;
-}
-if (consecutivosSinCompletar >= 7) {
-assistantIcon.textContent = '🔴';
-assistantText.innerHTML = '<span class="assistant-highlight">Alerta de abandono.</span> 7 días sin actividad. ¿Conversamos para ajustar el plan?';
+} else if (consecutivosSinCompletar >= 7) {
+icono = '🔴';
+mensaje = '<span class="assistant-highlight">Alerta de abandono.</span> 7 días sin actividad. ¿Conversamos para ajustar el plan?';
+mostrarBoton = true;
+textoBoton = '📞 Hablar con Joseph';
 banner.style.borderColor = '#ef4444';
 } else if (consecutivosSinCompletar >= 4) {
-assistantIcon.textContent = '⚠️';
-assistantText.innerHTML = 'Estás en <span class="assistant-highlight">zona de riesgo.</span> 4 días sin marcar. ¿Qué podemos hacer distinto?';
+icono = '⚠️';
+mensaje = 'Estás en <span class="assistant-highlight">zona de riesgo.</span> ' + consecutivosSinCompletar + ' días sin marcar. ¿Qué podemos hacer distinto?';
+mostrarBoton = true;
+textoBoton = '🛠️ Solicitar Ajuste';
 banner.style.borderColor = '#f97316';
 } else if (consecutivosSinCompletar >= 2) {
-assistantIcon.textContent = '💡';
-assistantText.innerHTML = 'Pequeña pausa. <span class="assistant-highlight">2 días sin actividad.</span> ¿Retomamos mañana?';
+icono = '💡';
+mensaje = 'Pequeña pausa. <span class="assistant-highlight">' + consecutivosSinCompletar + ' días sin actividad.</span> ¿Retomamos mañana?';
+mostrarBoton = true;
+textoBoton = '🛠️ Solicitar Ajuste';
 banner.style.borderColor = '#eab308';
 } else {
-assistantIcon.textContent = '🧠';
-assistantText.innerHTML = 'Estás al día. <span class="assistant-highlight">Buen ritmo, Eli.</span> Sigue construyendo tu racha.';
+icono = '🧠';
+mensaje = 'Estás al día. <span class="assistant-highlight">Buen ritmo, Eli.</span> Sigue construyendo tu racha.';
+mostrarBoton = false;
 banner.style.borderColor = 'rgba(47,106,135,0.3)';
+}
+
+assistantIcon.textContent = icono;
+assistantText.innerHTML = mensaje;
+
+// Gestionar botón dinámico dentro del banner
+let botonExistente = document.getElementById('dynamicAdjustBtn');
+if (mostrarBoton) {
+if (!botonExistente) {
+const boton = document.createElement('button');
+boton.id = 'dynamicAdjustBtn';
+boton.className = 'ajuste-btn-inline';
+boton.textContent = textoBoton;
+boton.onclick = () => {
+window.open('https://wa.me/+525531178903?text=Hola%20Joseph,%20necesito%20ajustar%20mi%20plan%20por:', '_blank');
+};
+// Insertar después del texto del asistente
+assistantText.parentElement.appendChild(boton);
+} else {
+botonExistente.textContent = textoBoton;
+}
+} else if (botonExistente) {
+botonExistente.remove();
 }
 }
 
