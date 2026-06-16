@@ -5,572 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Joseph Antoninos | Client OS</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<style>
-*{
-margin: 0;
-padding: 0;
-box-sizing: border-box;
-font-family: 'Inter', sans-serif;
-}
-html {
-scroll-behavior: smooth;
-}
-body {
-background: #0f0f0f;
-color: #e7e7e7;
-overflow-x: hidden;
-line-height: 1.6;
--webkit-tap-highlight-color: transparent;
-}
-
-/* Pantalla de bloqueo */
-.lock-screen {
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2f6a87 100%);
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-z-index: 9999;
-text-align: center;
-padding: 20px;
-}
-.lock-screen.hidden { display: none; }
-.lock-logo {
-font-size: 14px;
-letter-spacing: 3px;
-text-transform: uppercase;
-color: #6eb2cc;
-margin-bottom: 30px;
-}
-.lock-screen h1 {
-font-size: 2.5rem;
-font-weight: 800;
-margin-bottom: 10px;
-color: #e7e7e7;
-}
-.lock-screen h2 {
-font-size: 1.5rem;
-font-weight: 600;
-color: #6eb2cc;
-margin-bottom: 30px;
-letter-spacing: 2px;
-}
-.pin-input {
-background: rgba(26,26,26,0.8);
-backdrop-filter: blur(12px);
-border: 1px solid #2f6a87;
-color: #e7e7e7;
-font-size: 2rem;
-padding: 15px 20px;
-border-radius: 16px;
-text-align: center;
-width: 200px;
-letter-spacing: 10px;
-margin-bottom: 20px;
-outline: none;
-transition: 0.3s;
-}
-.pin-input:focus { border-color: #ea6c36; }
-.pin-btn {
-padding: 16px 40px;
-border-radius: 40px;
-background: #ea6c36;
-color: #e7e7e7;
-text-decoration: none;
-font-weight: 700;
-letter-spacing: 1px;
-transition: 0.3s;
-border: none;
-cursor: pointer;
-font-size: 1rem;
-}
-.pin-btn:hover { background: #9a5131; }
-.pin-error { color: #ea6c36; margin-top: 15px; font-size: 0.9rem; display: none; }
-
-/* Contenido principal */
-.main-content { display: none; }
-.main-content.visible { display: block; }
-
-/* Dashboard */
-.dashboard {
-background: rgba(26,26,26,0.75);
-backdrop-filter: blur(16px);
--webkit-backdrop-filter: blur(16px);
-border-bottom: 1px solid rgba(47,106,135,0.3);
-padding: 16px 12px;
-display: flex;
-flex-wrap: wrap;
-justify-content: space-around;
-align-items: center;
-gap: 12px;
-text-align: center;
-position: sticky;
-top: 0;
-z-index: 100;
-}
-.dashboard-item {
-display: flex;
-flex-direction: column;
-align-items: center;
-min-width: 60px;
-}
-.dashboard-label {
-font-size: 0.7rem;
-text-transform: uppercase;
-letter-spacing: 1.5px;
-color: #6eb2cc;
-margin-bottom: 4px;
-opacity: 0.9;
-}
-.dashboard-value {
-font-size: 1rem;
-font-weight: 700;
-color: #e7e7e7;
-}
-
-/* Círculo de Score */
-.score-circle {
-width: 60px;
-height: 60px;
-border-radius: 50%;
-display: flex;
-align-items: center;
-justify-content: center;
-margin: 2px 0;
-transition: background 0.5s ease;
-position: relative;
-}
-.score-circle span {
-background: #1a1a1a;
-width: 48px;
-height: 48px;
-border-radius: 50%;
-display: flex;
-flex-direction: column;
-align-items: center;
-justify-content: center;
-font-weight: 800;
-font-size: 1rem;
-color: #e7e7e7;
-line-height: 1;
-}
-.score-label {
-font-size: 0.6rem;
-font-weight: 600;
-letter-spacing: 0.5px;
-margin-top: 2px;
-text-transform: uppercase;
-}
-
-/* Banner de asistente */
-.assistant-banner {
-margin: 12px 16px;
-padding: 12px 16px;
-background: rgba(26,26,26,0.8);
-backdrop-filter: blur(12px);
-border-radius: 20px;
-border: 1px solid rgba(47,106,135,0.3);
-display: flex;
-align-items: center;
-gap: 12px;
-font-size: 0.9rem;
-transition: 0.3s;
-}
-.assistant-icon {
-font-size: 1.5rem;
-background: linear-gradient(135deg, #2f6a87, #6eb2cc);
-width: 40px;
-height: 40px;
-border-radius: 12px;
-display: flex;
-align-items: center;
-justify-content: center;
-flex-shrink: 0;
-}
-.assistant-text {
-color: #cbd5e1;
-font-weight: 500;
-line-height: 1.4;
-}
-.assistant-highlight {
-color: #ea6c36;
-font-weight: 700;
-}
-
-/* Hero */
-.hero {
-min-height: 80vh;
-background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #2f6a87 100%);
-display: flex;
-align-items: center;
-justify-content: center;
-padding: 30px 20px;
-text-align: center;
-}
-.hero-content { max-width: 800px; }
-.hero h1 {
-font-size: 2.8rem;
-font-weight: 800;
-margin-bottom: 8px;
-color: #e7e7e7;
-letter-spacing: -0.5px;
-}
-.hero h2 {
-font-size: 1.5rem;
-font-weight: 600;
-color: #6eb2cc;
-margin-bottom: 20px;
-letter-spacing: 2px;
-}
-.hero p {
-font-size: 1.1rem;
-font-weight: 300;
-color: #e7e7e7;
-margin-bottom: 20px;
-line-height: 1.5;
-}
-.feature-list {
-list-style: none;
-display: flex;
-flex-wrap: wrap;
-justify-content: center;
-gap: 10px;
-margin-bottom: 30px;
-}
-.feature-list li {
-background: rgba(110,178,204,0.1);
-border: 1px solid #6eb2cc;
-padding: 8px 16px;
-border-radius: 30px;
-color: #6eb2cc;
-font-weight: 500;
-font-size: 0.85rem;
-}
-.btn {
-display: inline-block;
-padding: 16px 32px;
-border-radius: 40px;
-background: #ea6c36;
-color: #e7e7e7;
-text-decoration: none;
-font-weight: 700;
-letter-spacing: 1px;
-transition: 0.3s;
-border: none;
-cursor: pointer;
-font-size: 1rem;
-}
-.btn:hover { background: #9a5131; transform: translateY(-2px); }
-
-/* Secciones */
-.section {
-padding: 40px 16px;
-max-width: 1100px;
-margin: auto;
-}
-.section-title {
-font-size: 2rem;
-font-weight: 800;
-margin-bottom: 12px;
-text-align: center;
-color: #e7e7e7;
-}
-.section-subtitle {
-text-align: center;
-color: #6eb2cc;
-margin-bottom: 30px;
-font-size: 0.95rem;
-}
-.cards {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-gap: 16px;
-}
-.card {
-background: #1a1a1a;
-padding: 24px;
-border-radius: 20px;
-border: 1px solid #2f6a87;
-transition: 0.3s;
-text-align: center;
-}
-.card:active { transform: scale(0.98); }
-.card h3 { margin-bottom: 10px; color: #e7e7e7; font-size: 1.1rem; }
-.card p { color: #6eb2cc; font-size: 0.9rem; }
-
-/* Evaluación inicial */
-.eval-grid {
-display: grid;
-grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-gap: 16px;
-}
-.eval-card {
-background: #1a1a1a;
-border-radius: 20px;
-padding: 20px;
-border: 1px solid #2f6a87;
-}
-.eval-card h4 {
-color: #6eb2cc;
-font-size: 0.9rem;
-margin-bottom: 10px;
-text-transform: uppercase;
-letter-spacing: 1px;
-}
-.eval-number { font-size: 2rem; font-weight: 800; color: #ea6c36; }
-.eval-unit { font-size: 0.8rem; color: #6eb2cc; margin-left: 4px; }
-.eval-segment {
-display: flex;
-justify-content: space-between;
-padding: 6px 0;
-border-bottom: 1px solid rgba(255,255,255,0.05);
-font-size: 0.85rem;
-}
-.eval-segment:last-child { border: none; }
-.eval-segment span:first-child { color: #94a3b8; }
-.eval-segment span:last-child { color: #e7e7e7; font-weight: 600; }
-
-/* Calendario */
-.weeks-container { display: flex; flex-direction: column; gap: 20px; }
-.week-box {
-background: #1a1a1a;
-border-radius: 20px;
-padding: 20px;
-border: 1px solid #2f6a87;
-}
-.week-box h3 { font-size: 1.2rem; margin-bottom: 12px; color: #ea6c36; }
-.calendar {
-display: grid;
-grid-template-columns: repeat(7, 1fr);
-gap: 8px;
-}
-.day {
-background: #0f0f0f;
-padding: 10px 4px;
-border-radius: 14px;
-text-align: center;
-border: 1px solid #2a2a2a;
-transition: 0.2s;
-position: relative;
-}
-.day strong {
-display: block;
-margin-bottom: 2px;
-color: #e7e7e7;
-font-size: 0.8rem;
-font-weight: 600;
-}
-.day span {
-color: #6eb2cc;
-display: block;
-margin-bottom: 6px;
-font-size: 0.7rem;
-line-height: 1.2;
-}
-.day input[type="checkbox"] {
-appearance: none;
-width: 28px;
-height: 28px;
-background: #2a2a2a;
-border-radius: 8px;
-cursor: pointer;
-border: 2px solid #2f6a87;
-transition: 0.2s;
-margin: 0 auto;
-display: block;
-}
-.day input[type="checkbox"]:disabled {
-opacity: 0.4;
-cursor: not-allowed;
-background: #1a1a1a;
-border-color: #333;
-}
-.day input[type="checkbox"]:checked {
-background: #ea6c36;
-border-color: #ea6c36;
-background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
-background-size: 16px;
-background-position: center;
-background-repeat: no-repeat;
-}
-
-/* Estados del día */
-.day.state-pending {
-border-color: #ffee00;
-background: #ffee000f;
-}
-.day.state-completed {
-border-color: #00ff00;
-background: #00ff000f;
-}
-.day.state-omitted {
-border-color: #cd0000;
-background: #cd00000f;
-}
-.day.state-unavailable {
-border-color: #333;
-background: #0a0a0a;
-opacity: 0.7;
-}
-.day.state-unavailable strong,
-.day.state-unavailable span {
-color: #555;
-}
-
-/* Registro de cargas */
-.exercise-log {
-background: #1a1a1a;
-border-radius: 20px;
-padding: 20px;
-margin-bottom: 16px;
-border: 1px solid #2f6a87;
-}
-.exercise-log h4 {
-color: #ea6c36;
-margin-bottom: 12px;
-display: flex;
-align-items: center;
-gap: 8px;
-flex-wrap: wrap;
-font-size: 1rem;
-}
-.weeks-inputs {
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap: 8px;
-margin-top: 8px;
-}
-.week-input-group {
-display: flex;
-flex-direction: column;
-align-items: center;
-}
-.week-input-group label {
-font-size: 0.7rem;
-color: #6eb2cc;
-margin-bottom: 4px;
-}
-.load-input {
-background: #0f0f0f;
-border: 1px solid #2f6a87;
-color: #e7e7e7;
-padding: 8px 4px;
-border-radius: 12px;
-text-align: center;
-width: 100%;
-max-width: 70px;
-font-size: 0.9rem;
-}
-.load-input:focus { border-color: #ea6c36; outline: none; }
-.video-btn {
-padding: 6px 14px;
-background: #2f6a87;
-border: none;
-border-radius: 20px;
-color: #e7e7e7;
-font-size: 0.75rem;
-cursor: pointer;
-transition: 0.3s;
-margin-left: 4px;
-}
-.video-btn:hover { background: #6eb2cc; }
-
-/* Modal Shorts */
-.modal {
-display: none;
-position: fixed;
-top: 0;
-left: 0;
-width: 100%;
-height: 100%;
-background: rgba(0,0,0,0.9);
-justify-content: center;
-align-items: center;
-z-index: 1000;
-}
-.modal-shorts-container {
-position: relative;
-display: flex;
-flex-direction: column;
-align-items: center;
-gap: 12px;
-}
-.close-modal {
-align-self: flex-end;
-background: none;
-border: none;
-color: #e7e7e7;
-font-size: 32px;
-cursor: pointer;
-line-height: 1;
-}
-.shorts-video-wrapper {
-width: 270px;
-height: 480px;
-max-width: 85vw;
-max-height: 70vh;
-position: relative;
-border-radius: 16px;
-overflow: hidden;
-box-shadow: 0 0 30px rgba(0,0,0,0.7);
-background: #000;
-}
-.shorts-video-wrapper iframe {
-width: 100%;
-height: 100%;
-border: none;
-}
-
-/* Footer */
-.footer {
-padding: 40px 16px;
-text-align: center;
-background: #0a0a0a;
-border-top: 1px solid #2f6a87;
-}
-.footer h2 { color: #e7e7e7; font-size: 1.3rem; }
-.footer p { color: #6eb2cc; max-width: 500px; margin: 10px auto 0; font-size: 0.9rem; }
-.hidden { display: none !important; }
-@media (max-width: 480px) {
-.dashboard { padding: 12px 8px; gap: 8px; }
-.dashboard-item { min-width: 50px; }
-.dashboard-value { font-size: 0.85rem; }
-.score-circle { width: 50px; height: 50px; }
-.score-circle span { width: 40px; height: 40px; font-size: 0.85rem; }
-.hero h1 { font-size: 2.2rem; }
-.hero h2 { font-size: 1.2rem; }
-.section-title { font-size: 1.6rem; }
-.weeks-inputs { grid-template-columns: 1fr 1fr; }
-.assistant-banner { margin: 10px 12px; padding: 10px 14px; font-size: 0.8rem; }
-.calendar { grid-template-columns: repeat(4, 1fr); }
-.day strong { font-size: 0.7rem; }
-.day span { font-size: 0.65rem; }
-}
-
-/* Botón inline dentro del banner del asistente */
-.ajuste-btn-inline {
-display: inline-block;
-background: #ea6c36;
-color: white;
-border: none;
-padding: 6px 14px;
-border-radius: 30px;
-font-size: 0.75rem;
-font-weight: 600;
-cursor: pointer;
-transition: all 0.3s ease;
-width: auto;
-}
-.ajuste-btn-inline:hover {
-background: #9a5131;
-transform: translateY(-1px);
-}
-</style>
+<link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
 
@@ -587,7 +22,7 @@ transform: translateY(-1px);
 <!-- Contenido principal -->
 <div class="main-content" id="mainContent">
 
-<!-- Dashboard superior -->
+<!-- Cliente & Salir -->
 <div class="dashboard" id="dashboard">
 <div class="dashboard-item">
 <span class="dashboard-label">Cliente</span>
@@ -595,6 +30,7 @@ transform: translateY(-1px);
 <button id="logoutBtn" style="background: #ea6c36; border: none; padding: 6px 12px; border-radius: 20px; color: white; cursor: pointer; font-size: 0.7rem;">Salir</button>
 </div>
 
+<!-- Día actual & Racha -->
 <div class="dashboard-item">
 <span class="dashboard-label">Día actual</span>
 <span class="dashboard-value" id="currentDayDisplay">1 de 28</span>
@@ -602,6 +38,7 @@ transform: translateY(-1px);
 <span class="dashboard-value" id="streakValue">0</span>
 </div>
 
+<!-- Score -->
 <div class="dashboard-item" id="scoreContainer">
 <span class="dashboard-label">Score</span>
 <div class="score-circle" id="scoreCircle">
@@ -610,6 +47,7 @@ transform: translateY(-1px);
 <span class="score-label" id="scoreLabel">—</span>
 </div>
 
+<!-- Próx. revisión -->
 <div class="dashboard-item">
 <span class="dashboard-label">Próx. revisión</span>
 <span class="dashboard-value" id="reviewDate">0</span>
@@ -629,9 +67,8 @@ Bienvenida, Eli. Tu sistema de transformación está listo.
 <!-- Hero -->
 <section class="hero">
 <div class="hero-content">
-<h1>JOSEPH ANTONINOS</h1>
-<h2>CLIENT OS</h2>
-<p>Sistema de Fuerza y Composición Corporal</p>
+<h1>CLIENT OS</h1>
+<h2>Sistema de Fuerza y Composición Corporal</h2>
 <p style="font-size: 1rem; font-weight: 400;">Hola Eli 👋<br>
 Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y consistencia en 4 semanas. Sin abandonar las actividades que disfrutas.</p>
 <ul class="feature-list">
@@ -682,6 +119,106 @@ Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y 
 </div>
 </section>
 
+<!-- Diagnóstico Profesional -->
+<section class="section">
+<div class="diagnostico-card">
+<h3 class="diagnostico-titulo">📋 Diagnóstico Inicial</h3>
+
+<div class="diagnostico-objetivo">
+<span class="diagnostico-icono">🎯</span>
+<div>
+<strong>Objetivo principal:</strong>
+<p>Reducir grasa corporal preservando masa muscular.</p>
+</div>
+</div>
+
+<div class="diagnostico-fortalezas">
+<span class="diagnostico-icono">✅</span>
+<div>
+<strong>Fortalezas detectadas:</strong>
+<ul>
+<li>Buena base aeróbica por Zumba y cardio regular.</li>
+<li>Participación constante en actividades grupales (alta adherencia potencial).</li>
+<li>Motivación inicial alta para cambios.</li>
+</ul>
+</div>
+</div>
+
+<div class="diagnostico-oportunidades">
+<span class="diagnostico-icono">⚠️</span>
+<div>
+<strong>Áreas de oportunidad:</strong>
+<ul>
+<li>Desarrollar fuerza general en miembros superiores e inferiores.</li>
+<li>Reducir grasa troncal (actual 42.6% - prioridad metabólica).</li>
+<li>Construir consistencia antes de aumentar intensidad.</li>
+</ul>
+</div>
+</div>
+
+<div class="diagnostico-enfoque">
+<span class="diagnostico-icono">🧠</span>
+<div>
+<strong>Enfoque de las próximas 4 semanas:</strong>
+<p>Construir adherencia al programa de fuerza, estabilizar hábitos y preparar el cuerpo para fases más intensas. No buscaremos cambios drásticos en 28 días, sino una base sólida para los próximos 90 días.</p>
+</div>
+</div>
+
+<div class="diagnostico-meta">
+<span class="diagnostico-icono">🏆</span>
+<div>
+<strong>Meta del programa:</strong>
+<p>Completar el 80%+ de las sesiones con registro de cargas progresivo. La transformación física será consecuencia natural de la consistencia.</p>
+</div>
+</div>
+</div>
+</section>
+
+<!-- Autoevaluación progresiva -->
+<section class="section">
+<h2 class="section-title">Seguimiento de Transformación</h2>
+<p class="section-subtitle">Registra tus métricas cada 7, 15 y 28 días para ver tu evolución.</p>
+<p class="precision-aviso">⚠️ Captura tus datos con precisión. Una vez guardados, no podrás modificarlos.</p>
+
+<div class="seguimiento-container">
+<!-- Semana 1 (día 7) -->
+<div class="seguimiento-card" id="seguimiento-semana1">
+<h3>🔵 Semana 1 (Día 7)</h3>
+<div class="seguimiento-inputs">
+<label>Peso (kg): <input type="number" step="0.1" id="peso_semana1" placeholder="Ej. 95.0"></label>
+<label>Masa Muscular (kg): <input type="number" step="0.1" id="musculo_semana1" placeholder="Ej. 29.5"></label>
+<label>Grasa Corporal (%): <input type="number" step="0.1" id="grasa_semana1" placeholder="Ej. 41.5"></label>
+</div>
+<button class="guardar-btn" data-semana="1" id="guardar-btn-1">💾 Guardar Semana 1</button>
+<div class="bloqueado-mensaje" style="display:none;">🔒 Evaluación bloqueada hasta el día 7</div>
+</div>
+
+<!-- Semana 2 (día 15) -->
+<div class="seguimiento-card" id="seguimiento-semana2">
+<h3>🟢 Semana 2 (Día 15)</h3>
+<div class="seguimiento-inputs">
+<label>Peso (kg): <input type="number" step="0.1" id="peso_semana2" placeholder="Ej. 93.5"></label>
+<label>Masa Muscular (kg): <input type="number" step="0.1" id="musculo_semana2" placeholder="Ej. 29.8"></label>
+<label>Grasa Corporal (%): <input type="number" step="0.1" id="grasa_semana2" placeholder="Ej. 40.2"></label>
+</div>
+<button class="guardar-btn" data-semana="2" id="guardar-btn-2">💾 Guardar Semana 2</button>
+<div class="bloqueado-mensaje" style="display:none;">🔒 Evaluación bloqueada hasta el día 15</div>
+</div>
+
+<!-- Semana 4 (día 28 - final) -->
+<div class="seguimiento-card" id="seguimiento-semana4">
+<h3>🟠 Final (Día 28)</h3>
+<div class="seguimiento-inputs">
+<label>Peso (kg): <input type="number" step="0.1" id="peso_semana4" placeholder="Ej. 88.5"></label>
+<label>Masa Muscular (kg): <input type="number" step="0.1" id="musculo_semana4" placeholder="Ej. 30.2"></label>
+<label>Grasa Corporal (%): <input type="number" step="0.1" id="grasa_semana4" placeholder="Ej. 38.5"></label>
+</div>
+<button class="guardar-btn" data-semana="4" id="guardar-btn-4">💾 Guardar Final</button>
+<div class="bloqueado-mensaje" style="display:none;">🔒 Evaluación bloqueada hasta el día 28</div>
+</div>
+</div>
+</section>
+
 <!-- Calendario -->
 <section id="programa" class="section">
 <h2 class="section-title">Calendario de Adherencia</h2>
@@ -699,6 +236,82 @@ Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y 
 <section class="section">
 <h2 class="section-title">Fuerza B</h2>
 <div id="workoutB"></div>
+</section>
+
+<!-- Tu progreso hacia la meta -->
+<section class="section">
+<h2 class="section-title">Tu progreso hacia la meta</h2>
+<p class="section-subtitle">Basado en tus evaluaciones registradas</p>
+
+<div class="transformacion-container">
+
+<!-- Progreso de Peso -->
+<div class="progreso-item">
+<div class="progreso-header">
+<span>⚖️ Peso Corporal</span>
+<span id="peso-actual">95.8 kg</span>
+</div>
+<div class="barra-container">
+<div class="barra-fondo">
+<div class="barra-llenado" id="barra-peso" style="width: 0%;"></div>
+</div>
+</div>
+<div class="progreso-footer" id="peso-footer">
+<span>Inicio: 95.8 kg</span>
+<span id="peso-cambio">⬇️ Has reducido 0 kg</span>
+</div>
+</div>
+
+<!-- Progreso de Masa Muscular -->
+<div class="progreso-item">
+<div class="progreso-header">
+<span>💪 Masa Muscular</span>
+<span id="musculo-actual">29.3 kg</span>
+</div>
+<div class="barra-container">
+<div class="barra-fondo">
+<div class="barra-llenado-musculo" id="barra-musculo" style="width: 0%;"></div>
+</div>
+</div>
+<div class="progreso-footer" id="musculo-footer">
+<span>Inicio: 29.3 kg</span>
+<span id="musculo-cambio">➡️ Te mantienes estable</span>
+</div>
+</div>
+
+<!-- Progreso de Grasa Corporal -->
+<div class="progreso-item">
+<div class="progreso-header">
+<span>🧈 Grasa Corporal</span>
+<span id="grasa-actual">42.6%</span>
+</div>
+<div class="barra-container">
+<div class="barra-fondo">
+<div class="barra-llenado-grasa" id="barra-grasa" style="width: 0%;"></div>
+</div>
+</div>
+<div class="progreso-footer" id="grasa-footer">
+<span>Inicio: 42.6%</span>
+<span id="grasa-cambio">⬇️ Has reducido 0%</span>
+</div>
+</div>
+</div>
+
+<!-- Check-in semanal -->
+<div class="checkin-container" id="checkinContainer" style="display: none;">
+<div class="checkin-card">
+<h3>🧠 ¿Cómo te sentiste esta semana?</h3>
+<p>Tu opinión me ayuda a ajustar el plan para ti.</p>
+<div class="checkin-emojis">
+<button class="checkin-btn" data-estado="excelente">😀 Excelente</button>
+<button class="checkin-btn" data-estado="bien">🙂 Bien</button>
+<button class="checkin-btn" data-estado="regular">😐 Regular</button>
+<button class="checkin-btn" data-estado="dificil">😕 Difícil</button>
+<button class="checkin-btn" data-estado="muy-dificil">😫 Muy difícil</button>
+</div>
+<p class="checkin-mensaje" id="checkinMensaje" style="display: none;">✅ Gracias por compartir cómo te sientes. Esto me ayuda a mejorar tu experiencia.</p>
+</div>
+</div>
 </section>
 
 <!-- ¿Cómo funciona? -->
@@ -722,418 +335,16 @@ Este programa fue diseñado para ayudarte a desarrollar fuerza, masa muscular y 
 <!-- Modal video -->
 <div class="modal" id="videoModal">
 <div class="modal-shorts-container">
-<button class="close-modal" onclick="closeVideo()">&times;</button>
+<button class="close-modal" id="closeModalBtn">&times;</button>
 <div class="shorts-video-wrapper">
 <iframe id="youtubeFrame" src="" allowfullscreen allow="autoplay; encrypted-media"></iframe>
 </div>
 </div>
 </div>
-
 </div>
-<!-- Fin main-content -->
 
-<script>
-
-function closeVideo() {
-const iframe = document.getElementById('youtubeFrame');
-if (iframe) iframe.src = '';
-const modal = document.getElementById('videoModal');
-if (modal) modal.style.display = 'none';
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-// ================== SISTEMA DE PIN ==================
-const CORRECT_PIN = "2929";
-const lockScreen = document.getElementById('lockScreen');
-const mainContent = document.getElementById('mainContent');
-const pinInput = document.getElementById('pinInput');
-const pinBtn = document.getElementById('pinBtn');
-const pinError = document.getElementById('pinError');
-
-// ================== DATOS DEL PROGRAMA ==================
-const TOTAL_DAYS = 28;
-const ACTIVITIES = [
-'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
-'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
-'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso',
-'Fuerza A', 'Circuitos', 'Cardio', 'Fuerza B', 'Zumba', 'Descanso', 'Descanso'
-];
-const exercisesA = ['Sentadilla Goblet 3x10', 'Press Banco Mancuernas 3x10', 'Remo 3x10', 'Plancha 3x30 seg'];
-const exercisesB = ['Peso Muerto Rumano 3x10', 'Press Militar 3x10', 'Jalón al Pecho 3x10', 'Pallof Press 3x12'];
-const videoIdsA = ['F3-DxxLNrqw', '48L0oQApm_0', '2z3tI5c7Oc8', '3AM7L2k7BEw'];
-const videoIdsB = ['SAdzug-v7D0', 'IuR427toLXE', 'udUQ99c3oRE', 'PSb76pXrGNI'];
-
-let completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
-let cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
-const allExercises = [...exercisesA, ...exercisesB];
-allExercises.forEach(ex => {
-if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
-});
-
-let startDate = localStorage.getItem('fitnessStartDate');
-let systemInitialized = false;
-
-// ================== FUNCIONES ==================
-function initStartDate() {
-if (!startDate) {
-startDate = new Date().toISOString().split('T')[0];
-localStorage.setItem('fitnessStartDate', startDate);
-}
-updateDateDisplay();
-}
-
-function getDayIndexFromStart() {
-if (!startDate) return 0;
-const start = new Date(startDate + 'T00:00:00');
-const today = new Date();
-today.setHours(0,0,0,0);
-const diffTime = today - start;
-const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-return Math.min(Math.max(diffDays, 0), TOTAL_DAYS - 1);
-}
-
-function getCurrentStreak() {
-let streak = 0;
-const todayIndex = getDayIndexFromStart();
-for (let i = todayIndex; i >= 0; i--) {
-if (completedDays[i]) streak++;
-else break;
-}
-return streak;
-}
-
-function saveAll() {
-localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
-localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
-}
-
-function getAvailableDaysCount() {
-return getDayIndexFromStart() + 1;
-}
-
-function getAdherenceScore() {
-const available = getAvailableDaysCount();
-const completed = completedDays.slice(0, available).filter(d => d).length;
-const pct = available === 0 ? 0 : Math.round((completed / available) * 100);
-let label, color;
-if (pct >= 90) { label = '🏆 Excelente 🏆'; color = '#22c55e'; }
-else if (pct >= 75) { label = '🥳 Bueno 🥳'; color = '#eab308'; }
-else if (pct >= 50) { label = '⚠️ Riesgo ⚠️'; color = '#f97316'; }
-else { label = '🚨 Crítico 🚨'; color = '#ef4444'; }
-return { score: pct, label, color };
-}
-
-function updateDateDisplay() {
-if (!startDate) return;
-const start = new Date(startDate + 'T00:00:00');
-const end = new Date(start);
-end.setDate(end.getDate() + TOTAL_DAYS);
-const options = { day: 'numeric', month: 'long' };
-const reviewEl = document.getElementById('reviewDate');
-if (reviewEl) reviewEl.textContent = end.toLocaleDateString('es-ES', options);
-const today = new Date();
-today.setHours(0, 0, 0, 0);
-const daysLeft = Math.max(0, Math.ceil((end - today) / (1000 * 60 * 60 * 24)));
-const daysLeftEl = document.getElementById('daysLeft');
-if (daysLeftEl) daysLeftEl.textContent = daysLeft;
-}
-
-function updateAlerts() {
-const todayIndex = getDayIndexFromStart();
-const totalCompleted = completedDays.filter(d => d).length;
-let consecutivosSinCompletar = 0;
-for (let i = todayIndex; i >= 0; i--) {
-if (!completedDays[i]) consecutivosSinCompletar++;
-else break;
-}
-
-const assistantIcon = document.getElementById('assistantIcon');
-const assistantText = document.getElementById('assistantText');
-const banner = document.getElementById('assistantBanner');
-
-if (!assistantIcon || !assistantText || !banner) return;
-
-let icono = '🧠';
-let mensaje = '';
-let mostrarBoton = false;
-let textoBoton = '';
-
-if (totalCompleted === 0) {
-icono = '🧠';
-mensaje = 'Bienvenida, Eli. Tu sistema de transformación está listo. Marca tu primer día cuando estés lista.';
-mostrarBoton = false;
-banner.style.borderColor = 'rgba(47,106,135,0.3)';
-} else if (consecutivosSinCompletar >= 7) {
-icono = '🔴';
-mensaje = '<span class="assistant-highlight">Alerta de abandono.</span> 7 días sin actividad. ¿Conversamos para ajustar el plan?';
-mostrarBoton = true;
-textoBoton = '📞 Hablar con Joseph';
-banner.style.borderColor = '#ef4444';
-} else if (consecutivosSinCompletar >= 4) {
-icono = '⚠️';
-mensaje = 'Estás en <span class="assistant-highlight">zona de riesgo.</span> ' + consecutivosSinCompletar + ' días sin marcar. ¿Qué podemos hacer distinto?';
-mostrarBoton = true;
-textoBoton = '🛠️ Solicitar Ajuste';
-banner.style.borderColor = '#f97316';
-} else if (consecutivosSinCompletar >= 2) {
-icono = '💡';
-mensaje = 'Pequeña pausa. <span class="assistant-highlight">' + consecutivosSinCompletar + ' días sin actividad.</span> ¿Retomamos mañana?';
-mostrarBoton = true;
-textoBoton = '🛠️ Solicitar Ajuste';
-banner.style.borderColor = '#eab308';
-} else {
-icono = '🧠';
-mensaje = 'Estás al día. <span class="assistant-highlight">Buen ritmo, Eli.</span> Sigue construyendo tu racha.';
-mostrarBoton = false;
-banner.style.borderColor = 'rgba(47,106,135,0.3)';
-}
-
-assistantIcon.textContent = icono;
-assistantText.innerHTML = mensaje;
-
-// Gestionar botón dinámico dentro del banner
-let botonExistente = document.getElementById('dynamicAdjustBtn');
-if (mostrarBoton) {
-if (!botonExistente) {
-const boton = document.createElement('button');
-boton.id = 'dynamicAdjustBtn';
-boton.className = 'ajuste-btn-inline';
-boton.textContent = textoBoton;
-boton.onclick = () => {
-window.open('https://wa.me/+525531178903?text=Hola%20Joseph,%20necesito%20ajustar%20mi%20plan%20por:', '_blank');
-};
-// Insertar después del texto del asistente
-assistantText.parentElement.appendChild(boton);
-} else {
-botonExistente.textContent = textoBoton;
-}
-} else if (botonExistente) {
-botonExistente.remove();
-}
-}
-
-function updateCalendarStates() {
-const todayIndex = getDayIndexFromStart();
-for (let i = 0; i < TOTAL_DAYS; i++) {
-const dayDiv = document.getElementById('day' + i);
-if (!dayDiv) continue;
-const checkbox = document.getElementById('dayCheckbox' + i);
-if (!checkbox) continue;
-dayDiv.classList.remove('state-pending', 'state-completed', 'state-omitted', 'state-unavailable');
-if (i > todayIndex) {
-dayDiv.classList.add('state-unavailable');
-checkbox.disabled = true;
-checkbox.checked = false;
-} else if (completedDays[i]) {
-dayDiv.classList.add('state-completed');
-checkbox.disabled = false;
-checkbox.checked = true;
-} else if (i === todayIndex) {
-dayDiv.classList.add('state-pending');
-checkbox.disabled = false;
-checkbox.checked = false;
-} else {
-dayDiv.classList.add('state-omitted');
-checkbox.disabled = false;
-checkbox.checked = false;
-}
-}
-}
-
-function buildCalendar() {
-const container = document.getElementById('weeksContainer');
-if (!container) return;
-container.innerHTML = '';
-for (let w = 0; w < 4; w++) {
-const box = document.createElement('div');
-box.className = 'week-box';
-box.innerHTML = `<h3>Semana ${w + 1}</h3>`;
-const grid = document.createElement('div');
-grid.className = 'calendar';
-for (let d = 0; d < 7; d++) {
-const idx = w * 7 + d;
-const dayNumber = idx + 1;
-const dayDiv = document.createElement('div');
-dayDiv.className = 'day';
-dayDiv.id = 'day' + idx;
-dayDiv.innerHTML = `
-<strong>Día ${dayNumber}</strong>
-<span>${ACTIVITIES[idx]}</span>
-<input type="checkbox" id="dayCheckbox${idx}" ${completedDays[idx] ? 'checked' : ''}>
-`;
-const checkbox = dayDiv.querySelector('input');
-checkbox.addEventListener('change', function() {
-completedDays[idx] = this.checked;
-saveAll();
-updateAllUI();
-});
-grid.appendChild(dayDiv);
-}
-box.appendChild(grid);
-container.appendChild(box);
-}
-updateCalendarStates();
-}
-
-function buildWorkoutLog(containerId, exercises, videoIds) {
-const container = document.getElementById(containerId);
-if (!container) return;
-container.innerHTML = '';
-exercises.forEach((ex, i) => {
-const div = document.createElement('div');
-div.className = 'exercise-log';
-const weeks = cargas[ex] || ['', '', '', ''];
-div.innerHTML = `
-<h4>${ex} <button class="video-btn" data-video="${videoIds[i]}">▶ Ver Video</button></h4>
-<div class="weeks-inputs">
-${[1,2,3,4].map(s => `
-<div class="week-input-group">
-<label>Sem ${s}</label>
-<div style="display: flex; align-items: center; gap: 2px;">
-<input type="number" step="0.5" class="load-input" data-exercise="${ex}" data-week="${s-1}" value="${weeks[s-1]}" placeholder="0" style="width: 70px; text-align: center;">
-<span style="font-size:0.7rem;">kg</span>
-</div>
-</div>
-`).join('')}
-</div>
-`;
-container.appendChild(div);
-});
-document.querySelectorAll('.load-input').forEach(input => {
-input.addEventListener('change', function() {
-let val = this.value.trim();
-if (val === "") {
-// vacío permitido
-} else {
-let num = parseFloat(val);
-if (isNaN(num)) {
-const ex = this.dataset.exercise;
-const weekIdx = parseInt(this.dataset.week);
-this.value = cargas[ex][weekIdx] || '';
-return;
-}
-this.value = num;
-}
-const ex = this.dataset.exercise;
-const weekIdx = parseInt(this.dataset.week);
-cargas[ex][weekIdx] = this.value;
-saveAll();
-});
-});
-document.querySelectorAll('.video-btn').forEach(btn => {
-btn.addEventListener('click', function() {
-const videoId = this.dataset.video;
-openVideo(videoId);
-});
-});
-}
-
-function updateAdherenceScore() {
-const { score, label, color } = getAdherenceScore();
-const circle = document.getElementById('scoreCircle');
-const circleText = document.getElementById('scoreCircleText');
-const scoreLabel = document.getElementById('scoreLabel');
-const streak = getCurrentStreak();
-const streakElement = document.getElementById('streakValue');
-if (streakElement) streakElement.textContent = streak;
-if (circle && circleText) {
-circle.style.background = `conic-gradient(${color} 0deg ${score * 3.6}deg, #2a2a2a ${score * 3.6}deg 360deg)`;
-circleText.textContent = score + '%';
-}
-if (scoreLabel) {
-scoreLabel.textContent = label;
-scoreLabel.style.color = color;
-}
-const todayIndex = getDayIndexFromStart();
-const currentDayEl = document.getElementById('currentDayDisplay');
-if (currentDayEl) currentDayEl.textContent = `Día ${todayIndex + 1} de 28`;
-updateDateDisplay();
-updateAlerts();
-}
-
-function updateAllUI() {
-updateAdherenceScore();
-updateCalendarStates();
-}
-
-function openVideo(videoId) {
-const iframe = document.getElementById('youtubeFrame');
-if (iframe) iframe.src = `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&autoplay=1`;
-const modal = document.getElementById('videoModal');
-if (modal) modal.style.display = 'flex';
-}
-
-// Modal close handler
-const modal = document.getElementById('videoModal');
-if (modal) {
-modal.addEventListener('click', function(e) {
-if (e.target === this) closeVideo();
-});
-}
-
-// ================== INICIALIZACIÓN DEL SISTEMA ==================
-function inicializarSistema() {
-if (systemInitialized) return;
-initStartDate();
-buildCalendar();
-buildWorkoutLog('workoutA', exercisesA, videoIdsA);
-buildWorkoutLog('workoutB', exercisesB, videoIdsB);
-updateAllUI();
-systemInitialized = true;
-}
-
-// ================== COMPROBAR SESIÓN ==================
-if (localStorage.getItem('fitnessAuth') === 'true') {
-lockScreen.classList.add('hidden');
-mainContent.classList.add('visible');
-inicializarSistema();
-} else {
-lockScreen.classList.remove('hidden');
-mainContent.classList.remove('visible');
-if (pinInput) pinInput.value = '';
-if (pinError) pinError.style.display = 'none';
-}
-
-// ================== EVENTOS PIN ==================
-function checkPin() {
-if (pinInput.value === CORRECT_PIN) {
-localStorage.setItem('fitnessAuth', 'true');
-lockScreen.classList.add('hidden');
-mainContent.classList.add('visible');
-inicializarSistema();
-} else {
-if (pinError) pinError.style.display = 'block';
-if (pinInput) {
-pinInput.value = '';
-pinInput.focus();
-}
-}
-}
-
-if (pinBtn) pinBtn.addEventListener('click', checkPin);
-if (pinInput) {
-pinInput.addEventListener('keypress', function(e) {
-if (e.key === 'Enter') checkPin();
-});
-pinInput.addEventListener('input', function() {
-if (pinError) pinError.style.display = 'none';
-});
-}
-
-// ================== CIERRE DE SESIÓN ==================
-const logoutBtn = document.getElementById('logoutBtn');
-if (logoutBtn) {
-logoutBtn.addEventListener('click', function() {
-localStorage.removeItem('fitnessAuth');
-lockScreen.classList.remove('hidden');
-mainContent.classList.remove('visible');
-if (pinInput) pinInput.value = '';
-if (pinError) pinError.style.display = 'none';
-systemInitialized = false; // Permite reinicializar si vuelve a entrar
-});
-}
-});
-</script>
-
+<script src="js/config.js"></script>
+<script src="js/shared.js"></script>
+<script src="js/client.js"></script>
 </body>
 </html>
