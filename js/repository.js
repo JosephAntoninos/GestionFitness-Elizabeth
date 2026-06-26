@@ -1,13 +1,7 @@
 // ================== REPOSITORIO DE DATOS ==================
-// Centraliza todas las operaciones de Firestore para Client OS
-
-// ID del cliente (hardcodeado temporalmente)
 const CLIENT_ID = 'elizabeth-001';
 
 const ClientRepository = {
-    /**
-     * Carga todos los datos del cliente desde Firestore
-     */
     async loadClient() {
         try {
             const doc = await db.collection('clients').doc(CLIENT_ID).get();
@@ -24,30 +18,25 @@ const ClientRepository = {
         }
     },
 
-    /**
-     * Guarda el progreso (días completados y cargas)
-     */
     async saveProgress(completedDays, cargas) {
         try {
             await db.collection('clients').doc(CLIENT_ID).update({
                 completedDays: completedDays,
                 cargas: cargas,
-                lastAccess: new Date().toISOString()
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             });
-            console.log('✅ Progreso guardado en Firestore');
+            console.log('✅ Progreso guardado en Firestore con timestamp');
         } catch (error) {
             console.error('❌ Error al guardar progreso:', error);
             throw error;
         }
     },
 
-    /**
-     * Guarda una evaluación (week1, week2, week4)
-     */
     async saveEvaluation(weekKey, evaluationData) {
         try {
             await db.collection('clients').doc(CLIENT_ID).update({
-                [`evaluations.${weekKey}`]: evaluationData
+                [`evaluations.${weekKey}`]: evaluationData,
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             });
             console.log(`✅ Evaluación ${weekKey} guardada en Firestore`);
         } catch (error) {
@@ -56,13 +45,11 @@ const ClientRepository = {
         }
     },
 
-    /**
-     * Guarda un check-in semanal
-     */
     async saveCheckin(checkinData) {
         try {
             await db.collection('clients').doc(CLIENT_ID).update({
-                checkins: firebase.firestore.FieldValue.arrayUnion(checkinData)
+                checkins: firebase.firestore.FieldValue.arrayUnion(checkinData),
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
             });
             console.log('✅ Check-in guardado en Firestore');
         } catch (error) {
@@ -71,9 +58,6 @@ const ClientRepository = {
         }
     },
 
-    /**
-     * Actualiza la configuración del cliente (usado por el coach)
-     */
     async updateProfile(profileData) {
         try {
             await db.collection('clients').doc(CLIENT_ID).update(profileData);
@@ -84,9 +68,6 @@ const ClientRepository = {
         }
     },
 
-    /**
-     * Suscripción en tiempo real a cambios del cliente
-     */
     subscribeToClient(callback) {
         return db.collection('clients').doc(CLIENT_ID)
             .onSnapshot((doc) => {
@@ -99,5 +80,4 @@ const ClientRepository = {
     }
 };
 
-// Exponer globalmente
 window.ClientRepository = ClientRepository;
