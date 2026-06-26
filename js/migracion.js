@@ -1,8 +1,7 @@
 // ================== MIGRACIÓN DE LOCALSTORAGE A FIRESTORE ==================
 async function migrarDatosAFirestore() {
-    const clientId = 'elizabeth-001'; // Cambia por el ID real del cliente
+    const clientId = 'elizabeth-001';
     
-    // Leer datos de localStorage
     const completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || [];
     const cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
     const startDate = localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
@@ -13,7 +12,6 @@ async function migrarDatosAFirestore() {
     };
     const checkins = JSON.parse(localStorage.getItem('checkinRespuestas')) || [];
     
-    // Construir el objeto a guardar en Firestore
     const clienteData = {
         name: "Elizabeth",
         pin: "2929",
@@ -27,7 +25,8 @@ async function migrarDatosAFirestore() {
         cargas: cargas,
         evaluations: evaluaciones,
         checkins: checkins,
-        lastAccess: new Date().toISOString()
+        lastAccess: new Date().toISOString(),
+        lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
     };
     
     try {
@@ -40,6 +39,19 @@ async function migrarDatosAFirestore() {
     }
 }
 
-// Ejecutar la migración (solo una vez)
-// Puedes llamar a esta función desde la consola cuando quieras:
-// migrarDatosAFirestore();
+// Función para agregar lastUpdate a documentos existentes (ejecutar una vez)
+async function migrarLastUpdate() {
+    try {
+        const snapshot = await db.collection('clients').get();
+        snapshot.forEach(doc => {
+            db.collection('clients').doc(doc.id).update({
+                lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
+            });
+        });
+        console.log('✅ Campo lastUpdate agregado a todos los clientes.');
+    } catch (error) {
+        console.error('❌ Error al migrar lastUpdate:', error);
+    }
+}
+
+// Ejecutar desde consola: migrarDatosAFirestore() o migrarLastUpdate()
