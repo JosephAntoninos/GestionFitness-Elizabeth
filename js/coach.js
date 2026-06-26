@@ -1,10 +1,8 @@
 // ================== PANEL DEL COACH - CON FIRESTORE ==================
 
-let clientes = [];           // Todos los clientes (cargados desde Firestore)
+let clientes = [];
 let clienteSeleccionado = null;
-let unsubscribeClientes = null; // Para limpiar la suscripción
-
-// ================== FUNCIONES AUXILIARES DE CÁLCULO ==================
+let unsubscribeClientes = null;
 
 function calcularScore(completedDays, diaPrograma) {
     if (!completedDays || completedDays.length === 0) return 0;
@@ -30,14 +28,10 @@ function calcularRiesgo(score, racha, ultimoAcceso) {
     return { nivel: 'alto', clase: 'riesgo-alto', texto: 'Alto' };
 }
 
-// ================== CARGAR CLIENTES DESDE FIRESTORE ==================
-
 function cargarClientes() {
     if (unsubscribeClientes) {
-        unsubscribeClientes(); // Limpiar suscripción previa
+        unsubscribeClientes();
     }
-    
-    // Suscripción en tiempo real a todos los clientes
     unsubscribeClientes = db.collection('clients')
         .onSnapshot((snapshot) => {
             clientes = [];
@@ -49,7 +43,6 @@ function cargarClientes() {
                 const score = calcularScore(data.completedDays || [], diaPrograma);
                 const racha = calcularRacha(data.completedDays || [], diaPrograma);
                 const riesgo = calcularRiesgo(score, racha, data.lastAccess);
-                
                 clientes.push({
                     id: id,
                     ...data,
@@ -65,27 +58,21 @@ function cargarClientes() {
         });
 }
 
-// ================== RENDERIZAR LISTA DE CLIENTES ==================
-
 function renderizarListaClientes() {
     const grid = document.getElementById('clientesGrid');
     if (!grid) return;
     grid.innerHTML = '';
-    
     if (clientes.length === 0) {
         grid.innerHTML = '<div style="text-align:center; color:#6eb2cc; padding:40px;">No hay clientes registrados aún.</div>';
         return;
     }
-    
     clientes.forEach(cliente => {
         const card = document.createElement('div');
         card.className = 'cliente-card';
-        
         const ultimo = cliente.lastAccess ? new Date(cliente.lastAccess) : new Date();
         const hoy = new Date();
         const diffDias = Math.floor((hoy - ultimo) / (1000*60*60*24));
         let ultimoTexto = diffDias === 0 ? 'Hoy' : diffDias === 1 ? 'Ayer' : `Hace ${diffDias} días`;
-        
         card.innerHTML = `
             <div class="cliente-nombre">${cliente.name || 'Sin nombre'}</div>
             <div class="cliente-estado">
@@ -103,8 +90,6 @@ function renderizarListaClientes() {
     });
 }
 
-// ================== ABRIR PERFIL DE CLIENTE ==================
-
 function abrirPerfil(id) {
     const cliente = clientes.find(c => c.id === id);
     if (!cliente) return;
@@ -112,8 +97,6 @@ function abrirPerfil(id) {
     const container = document.getElementById('perfilContainer');
     container.classList.add('visible');
     document.getElementById('perfilTitulo').textContent = `👤 ${cliente.name || 'Cliente'}`;
-    
-    // Rellenar datos de configuración
     document.getElementById('perfil-nombre').value = cliente.name || '';
     document.getElementById('perfil-pin').value = cliente.pin || '';
     document.getElementById('perfil-peso').value = cliente.initialWeight || '';
@@ -121,14 +104,10 @@ function abrirPerfil(id) {
     document.getElementById('perfil-grasa').value = cliente.initialFat || '';
     document.getElementById('perfil-diagnostico').value = cliente.diagnosis || '';
     document.getElementById('perfil-programa').value = cliente.program || 'Fuerza y Composición 28 días';
-    
-    // Rellenar métricas de seguimiento
     document.getElementById('perfil-score').textContent = cliente.score + '%';
     document.getElementById('perfil-racha').textContent = cliente.racha + ' días';
     document.getElementById('perfil-ultimo').textContent = cliente.lastAccess ? 
         new Date(cliente.lastAccess).toLocaleDateString('es-ES') : 'Sin acceso';
-    
-    // Evaluaciones
     const evalContainer = document.getElementById('perfil-evaluaciones');
     evalContainer.innerHTML = '';
     const evals = cliente.evaluations || {};
@@ -144,8 +123,6 @@ function abrirPerfil(id) {
     if (!evals.week1 && !evals.week2 && !evals.week4) {
         evalContainer.innerHTML = '<div style="color:#6eb2cc;">Aún no hay evaluaciones registradas</div>';
     }
-    
-    // Check-ins
     const checkinContainer = document.getElementById('perfil-checkins');
     checkinContainer.innerHTML = '';
     const checkins = cliente.checkins || [];
@@ -159,21 +136,16 @@ function abrirPerfil(id) {
     }
 }
 
-// ================== CERRAR PERFIL ==================
-
 function cerrarPerfil() {
     document.getElementById('perfilContainer').classList.remove('visible');
     clienteSeleccionado = null;
 }
-
-// ================== GUARDAR CONFIGURACIÓN ==================
 
 async function guardarConfiguracion() {
     if (!clienteSeleccionado) {
         alert('❌ No hay cliente seleccionado.');
         return;
     }
-    
     const perfilData = {
         name: document.getElementById('perfil-nombre').value,
         pin: document.getElementById('perfil-pin').value,
@@ -183,11 +155,9 @@ async function guardarConfiguracion() {
         diagnosis: document.getElementById('perfil-diagnostico').value,
         program: document.getElementById('perfil-programa').value
     };
-    
     try {
         await db.collection('clients').doc(clienteSeleccionado.id).update(perfilData);
         alert('✅ Configuración guardada correctamente en Firestore');
-        // Actualizar cliente local
         Object.assign(clienteSeleccionado, perfilData);
         renderizarListaClientes();
     } catch (error) {
@@ -196,16 +166,10 @@ async function guardarConfiguracion() {
     }
 }
 
-// ================== INICIALIZACIÓN ==================
-
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar clientes desde Firestore
     cargarClientes();
-    
-    // Eventos UI
     document.getElementById('btnCerrarPerfil').addEventListener('click', cerrarPerfil);
     document.getElementById('btnGuardarConfig').addEventListener('click', guardarConfiguracion);
-    
     document.getElementById('logoutCoach').addEventListener('click', function() {
         if (confirm('¿Cerrar sesión?')) {
             if (unsubscribeClientes) unsubscribeClientes();
