@@ -1,5 +1,5 @@
 // ================== SISTEMA DE PIN ==================
-let CORRECT_PIN = "1111"; // Valor por defecto (se actualiza desde Firestore)
+let CORRECT_PIN = "1111";
 const lockScreen = document.getElementById('lockScreen');
 const mainContent = document.getElementById('mainContent');
 const pinInput = document.getElementById('pinInput');
@@ -15,6 +15,7 @@ allExercises.forEach(ex => {
 
 let startDate = localStorage.getItem('fitnessStartDate');
 let systemInitialized = false;
+let unsubscribeCliente = null;
 
 // ================== FUNCIONES BASE ==================
 function initStartDate() {
@@ -91,10 +92,8 @@ async function guardarEvaluacion(semana) {
         diaPrograma: getDiaPrograma()
     };
 
-    // Guardar en localStorage (respaldo)
     localStorage.setItem(`evaluacion_semana${semana}`, JSON.stringify(evaluacion));
 
-    // Guardar en Firestore
     try {
         const weekKey = semana === 1 ? 'week1' : semana === 2 ? 'week2' : 'week4';
         await ClientRepository.saveEvaluation(weekKey, evaluacion);
@@ -144,7 +143,6 @@ function actualizarBloqueoEvaluaciones() {
     semanas.forEach(semana => {
         const card = document.getElementById(`seguimiento-semana${semana}`);
         if (!card) return;
-
         const inputs = card.querySelectorAll('.seguimiento-inputs input');
         const btn = document.getElementById(`guardar-btn-${semana}`);
         const mensajeBloqueo = card.querySelector('.bloqueado-mensaje');
@@ -183,12 +181,10 @@ function actualizarTodoEvaluaciones() {
 
 // ================== INDICADOR DE TRANSFORMACIÓN ==================
 function actualizarIndicadorTransformacion() {
-    // Valores iniciales
     const pesoInicial = 95.8;
     const musculoInicial = 29.3;
     const grasaInicial = 42.6;
 
-    // Obtener la evaluación más reciente
     let pesoActual = pesoInicial;
     let musculoActual = musculoInicial;
     let grasaActual = grasaInicial;
@@ -218,16 +214,13 @@ function actualizarIndicadorTransformacion() {
         evaluacionNombre = "Semana 1";
     }
 
-    // Actualizar textos principales
     document.getElementById('peso-actual').textContent = pesoActual + ' kg';
     document.getElementById('musculo-actual').textContent = musculoActual + ' kg';
     document.getElementById('grasa-actual').textContent = grasaActual + '%';
 
-    // Calcular PROGRESO DE PESO
     let pesoCambio = pesoActual - pesoInicial;
     let pesoCambioTexto = '';
     let progresoPeso = 0;
-
     if (pesoCambio < 0) {
         pesoCambioTexto = `⬇️ Has reducido ${Math.abs(pesoCambio).toFixed(1)} kg`;
         let reduccionMaxima = 10;
@@ -243,11 +236,9 @@ function actualizarIndicadorTransformacion() {
     document.getElementById('peso-cambio').textContent = pesoCambioTexto;
     document.getElementById('barra-peso').style.width = progresoPeso + '%';
 
-    // Calcular PROGRESO DE MASA MUSCULAR
     let musculoCambio = musculoActual - musculoInicial;
     let musculoCambioTexto = '';
     let progresoMusculo = 0;
-
     if (musculoCambio > 0) {
         musculoCambioTexto = `⬆️ Has ganado ${musculoCambio.toFixed(1)} kg`;
         let gananciaMaxima = 3;
@@ -262,11 +253,9 @@ function actualizarIndicadorTransformacion() {
     document.getElementById('musculo-cambio').textContent = musculoCambioTexto;
     document.getElementById('barra-musculo').style.width = progresoMusculo + '%';
 
-    // Calcular PROGRESO DE GRASA
     let grasaCambio = grasaActual - grasaInicial;
     let grasaCambioTexto = '';
     let progresoGrasa = 0;
-
     if (grasaCambio < 0) {
         grasaCambioTexto = `⬇️ Has reducido ${Math.abs(grasaCambio).toFixed(1)}%`;
         let reduccionMaxima = 10;
@@ -293,11 +282,9 @@ function mostrarCheckinSiCorresponde() {
         console.warn('⚠️ Contenedor de check-in no encontrado');
         return;
     }
-
     const ultimoCheckin = localStorage.getItem(ULTIMO_CHECKIN_KEY);
     const hoy = new Date().toDateString();
     const diaPrograma = getDiaPrograma();
-
     const esDiaCheckin = [1, 8, 15, 22].includes(diaPrograma);
     const yaHizoCheckinHoy = (ultimoCheckin === hoy);
 
@@ -323,13 +310,11 @@ async function guardarCheckin(estado) {
         diaPrograma: getDiaPrograma()
     };
 
-    // Guardar en localStorage (respaldo)
     let respuestas = JSON.parse(localStorage.getItem(CHECKIN_RESPUESTAS_KEY)) || [];
     respuestas.push(respuesta);
     localStorage.setItem(CHECKIN_RESPUESTAS_KEY, JSON.stringify(respuestas));
     localStorage.setItem(ULTIMO_CHECKIN_KEY, new Date().toDateString());
 
-    // Guardar en Firestore
     try {
         await ClientRepository.saveCheckin(respuesta);
         console.log('✅ Check-in guardado en Firestore');
@@ -338,7 +323,6 @@ async function guardarCheckin(estado) {
         alert('⚠️ Check-in guardado localmente pero no en la nube.');
     }
 
-    // UI: mensaje y ocultar botones
     const mensaje = document.getElementById('checkinMensaje');
     if (mensaje) mensaje.style.display = 'block';
     document.querySelectorAll('.checkin-btn').forEach(btn => {
@@ -599,122 +583,145 @@ function updateAllUI() {
     mostrarCheckinSiCorresponde();
 }
 
-// ================== INICIALIZACIÓN ==================
-async function inicializarSistema() {
-    if (systemInitialized) return;
-    initStartDate();
-
+// ================== SINCRONIZACIÓN INTELIGENTE ==================
+async function sincronizarConFirestore() {
     try {
-        const data = await ClientRepository.loadClient();
-        if (data) {
-            completedDays = data.completedDays || new Array(TOTAL_DAYS).fill(false);
-            cargas = data.cargas || {};
-            startDate = data.startDate || localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
+        // 1. Leer datos locales
+        const localCompleted = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
+        const localCargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
+        const localLastUpdate = parseInt(localStorage.getItem('fitnessLastUpdate')) || 0;
+        const localCount = localCompleted.filter(Boolean).length;
 
-            // Actualizar PIN desde Firestore
-            if (data.pin) {
-                CORRECT_PIN = data.pin;
-                console.log('✅ PIN actualizado desde Firestore:', CORRECT_PIN);
-            }
+        // 2. Leer datos de Firestore
+        const cloudDoc = await db.collection('clients').doc('elizabeth-001').get();
+        if (!cloudDoc.exists) {
+            // No existe en la nube: subir los locales
+            await ClientRepository.saveProgress(localCompleted, localCargas);
+            console.log('📤 Datos locales subidos a Firestore (primera vez)');
+            return;
+        }
+        const cloudData = cloudDoc.data();
+        const cloudCompleted = cloudData.completedDays || new Array(TOTAL_DAYS).fill(false);
+        const cloudCargas = cloudData.cargas || {};
+        const cloudLastUpdate = cloudData.lastUpdate ? cloudData.lastUpdate.toMillis() : 0;
+        const cloudCount = cloudCompleted.filter(Boolean).length;
 
-            // Actualizar nombre en el dashboard
-            const nombreCliente = document.querySelector('.dashboard-item .dashboard-value');
-            if (nombreCliente && data.name) {
-                nombreCliente.textContent = data.name;
-            }
+        // 3. Decidir ganador
+        let usarLocal = false;
+        let usarCloud = false;
 
-            localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
-            localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
-            localStorage.setItem('fitnessStartDate', startDate);
+        if (localCount > cloudCount) {
+            usarLocal = true;
+        } else if (cloudCount > localCount) {
+            usarCloud = true;
         } else {
-            // Fallback a localStorage
-            completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
-            cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
-            startDate = localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
+            // Empate: comparar lastUpdate
+            if (localLastUpdate > cloudLastUpdate) {
+                usarLocal = true;
+            } else if (cloudLastUpdate > localLastUpdate) {
+                usarCloud = true;
+            } else {
+                // Ya están sincronizados
+                console.log('✅ Los datos están sincronizados.');
+                return;
+            }
+        }
+
+        if (usarLocal) {
+            await ClientRepository.saveProgress(localCompleted, localCargas);
+            console.log('📤 Datos locales (más avanzados) subidos a Firestore.');
+            // Actualizar variables globales con los locales (ya están)
+            completedDays = localCompleted;
+            cargas = localCargas;
+        } else if (usarCloud) {
+            localStorage.setItem('fitnessCompletedDays', JSON.stringify(cloudCompleted));
+            localStorage.setItem('fitnessCargas', JSON.stringify(cloudCargas));
+            localStorage.setItem('fitnessLastUpdate', String(cloudLastUpdate));
+            completedDays = cloudCompleted;
+            cargas = cloudCargas;
+            console.log('📥 Datos de Firestore (más avanzados) descargados.');
         }
     } catch (error) {
-        console.error('❌ Error al cargar desde Firestore, usando localStorage:', error);
+        console.error('❌ Error en sincronización:', error);
+        // Fallback: cargar locales
         completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
         cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
-        startDate = localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
     }
-
-    // Inicializar cargas vacías
-    const allExercises = [...exercisesA, ...exercisesB];
-    allExercises.forEach(ex => {
-        if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
-    });
-
-    buildCalendar();
-    buildWorkoutLog('workoutA', exercisesA, videoIdsA);
-    buildWorkoutLog('workoutB', exercisesB, videoIdsB);
-    updateAllUI();
-    systemInitialized = true;
-
-    // Suscribirse a cambios en tiempo real
-    suscribirCliente();
 }
 
-// ================== SUSCRIPCIÓN EN TIEMPO REAL ==================
-let unsubscribeCliente = null;
-
-function suscribirCliente() {
+// ================== SUSCRIPCIÓN EN TIEMPO REAL CON PROTECCIÓN ==================
+function suscribirClienteConProteccion() {
     if (unsubscribeCliente) {
         unsubscribeCliente();
     }
 
     unsubscribeCliente = db.collection('clients').doc('elizabeth-001')
-        .onSnapshot((doc) => {
+        .onSnapshot(async (doc) => {
             if (doc.exists) {
                 const data = doc.data();
-                console.log('🔄 Cambios detectados en Firestore:', data);
+                const cloudCompleted = data.completedDays || new Array(TOTAL_DAYS).fill(false);
+                const cloudCargas = data.cargas || {};
+                const cloudLastUpdate = data.lastUpdate ? data.lastUpdate.toMillis() : 0;
+                const cloudCount = cloudCompleted.filter(Boolean).length;
 
-                // 1. Actualizar variables globales
-                completedDays = data.completedDays || new Array(TOTAL_DAYS).fill(false);
-                cargas = data.cargas || {};
-                startDate = data.startDate || localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
-                if (data.pin) {
-                    CORRECT_PIN = data.pin;
-                    console.log('🔄 PIN actualizado en tiempo real:', CORRECT_PIN);
+                const localCompleted = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
+                const localCargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
+                const localLastUpdate = parseInt(localStorage.getItem('fitnessLastUpdate')) || 0;
+                const localCount = localCompleted.filter(Boolean).length;
+
+                // Solo actualizar si cloud es más reciente/avanzado
+                if (cloudCount > localCount || (cloudCount === localCount && cloudLastUpdate > localLastUpdate)) {
+                    localStorage.setItem('fitnessCompletedDays', JSON.stringify(cloudCompleted));
+                    localStorage.setItem('fitnessCargas', JSON.stringify(cloudCargas));
+                    localStorage.setItem('fitnessLastUpdate', String(cloudLastUpdate));
+                    completedDays = cloudCompleted;
+                    cargas = cloudCargas;
+                    updateAllUI();
+                    buildWorkoutLog('workoutA', exercisesA, videoIdsA);
+                    buildWorkoutLog('workoutB', exercisesB, videoIdsB);
+                    console.log('🔄 UI actualizada desde Firestore (cambio remoto)');
+                } else if (localCount > cloudCount || (localCount === cloudCount && localLastUpdate > cloudLastUpdate)) {
+                    // Si local es más nuevo, subir a Firestore
+                    await ClientRepository.saveProgress(completedDays, cargas);
+                    console.log('📤 Subiendo cambios locales a Firestore (desde suscripción)');
                 }
-
-                // 2. Actualizar nombre en el dashboard
-                const nombreCliente = document.querySelector('.dashboard-item .dashboard-value');
-                if (nombreCliente && data.name) {
-                    nombreCliente.textContent = data.name;
-                }
-
-                // 3. Guardar en localStorage como caché
-                localStorage.setItem('fitnessCompletedDays', JSON.stringify(completedDays));
-                localStorage.setItem('fitnessCargas', JSON.stringify(cargas));
-                localStorage.setItem('fitnessStartDate', startDate);
-
-                // 4. Reconstruir UI
-                updateAllUI();
-                // Reconstruir los logs de ejercicios (por si cambiaron cargas)
-                buildWorkoutLog('workoutA', exercisesA, videoIdsA);
-                buildWorkoutLog('workoutB', exercisesB, videoIdsB);
-
-                console.log('✅ UI actualizada desde Firestore');
             }
         }, (error) => {
             console.error('❌ Error en suscripción:', error);
         });
 }
 
-// Comprobar sesión guardada
-if (localStorage.getItem('fitnessAuth') === 'true') {
-    lockScreen.classList.add('hidden');
-    mainContent.classList.add('visible');
-    inicializarSistema();
-} else {
-    lockScreen.classList.remove('hidden');
-    mainContent.classList.remove('visible');
-    if (pinInput) pinInput.value = '';
-    if (pinError) pinError.style.display = 'none';
+// ================== INICIALIZACIÓN ==================
+async function inicializarSistema() {
+    if (systemInitialized) return;
+    initStartDate();
+
+    // 1. Sincronizar con Firestore (inteligente)
+    await sincronizarConFirestore();
+
+    // 2. Cargar datos (ya actualizados)
+    completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
+    cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
+    startDate = localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
+
+    // 3. Inicializar cargas vacías
+    const allExercises = [...exercisesA, ...exercisesB];
+    allExercises.forEach(ex => {
+        if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
+    });
+
+    // 4. Construir UI
+    buildCalendar();
+    buildWorkoutLog('workoutA', exercisesA, videoIdsA);
+    buildWorkoutLog('workoutB', exercisesB, videoIdsB);
+    updateAllUI();
+    systemInitialized = true;
+
+    // 5. Suscribir en tiempo real (con protección)
+    suscribirClienteConProteccion();
 }
 
-// ================== VALIDACIÓN DE PIN CONTRA FIRESTORE ==================
+// ================== VALIDACIÓN DE PIN ==================
 async function checkPin() {
     const pinIngresado = pinInput.value.trim();
     if (!pinIngresado) {
@@ -774,7 +781,6 @@ if (pinInput) {
     });
 }
 
-// Cierre de sesión
 const logoutBtn = document.getElementById('logoutBtn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', function() {
@@ -784,10 +790,13 @@ if (logoutBtn) {
         if (pinInput) pinInput.value = '';
         if (pinError) pinError.style.display = 'none';
         systemInitialized = false;
+        if (unsubscribeCliente) {
+            unsubscribeCliente();
+            unsubscribeCliente = null;
+        }
     });
 }
 
-// Asignar eventos a botones de evaluaciones
 document.querySelectorAll('.guardar-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const semana = parseInt(this.dataset.semana);
@@ -795,7 +804,6 @@ document.querySelectorAll('.guardar-btn').forEach(btn => {
     });
 });
 
-// Modal video
 const modal = document.getElementById('videoModal');
 if (modal) {
     modal.addEventListener('click', function(e) {
@@ -803,8 +811,19 @@ if (modal) {
     });
 }
 
-// Botón de cierre del modal
 const closeModalBtn = document.getElementById('closeModalBtn');
 if (closeModalBtn) {
     closeModalBtn.addEventListener('click', closeVideo);
+}
+
+// Comprobar sesión guardada
+if (localStorage.getItem('fitnessAuth') === 'true') {
+    lockScreen.classList.add('hidden');
+    mainContent.classList.add('visible');
+    inicializarSistema();
+} else {
+    lockScreen.classList.remove('hidden');
+    mainContent.classList.remove('visible');
+    if (pinInput) pinInput.value = '';
+    if (pinError) pinError.style.display = 'none';
 }
