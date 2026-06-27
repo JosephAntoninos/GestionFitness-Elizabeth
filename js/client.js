@@ -438,12 +438,23 @@ function updateAdherenceScore() {
 
 function updateCalendarStates() {
     const todayIndex = getDayIndexFromStart();
-    console.log(`📅 updateCalendarStates: todayIndex=${todayIndex}, completedDays length=${completedDays.length}`);
-    console.log('📊 completedDays (primeros 15):', completedDays.slice(0, 15).map(d => d ? '✅' : '⬜').join(' '));
+    console.log(`📅 updateCalendarStates: todayIndex=${todayIndex}`);
+    console.log('📊 Días completados:', completedDays.filter(Boolean).length);
+    console.log('📊 Primeros 15 días:', completedDays.slice(0, 15).map(d => d ? '✅' : '⬜').join(' '));
     
+    // Verificar que el contenedor existe
+    const container = document.getElementById('weeksContainer');
+    if (!container) {
+        console.warn('⚠️ weeksContainer no encontrado, reconstruyendo calendario...');
+        buildCalendar();
+        return;
+    }
+    
+    // Actualizar cada día individualmente
     for (let i = 0; i < TOTAL_DAYS; i++) {
         const dayDiv = document.getElementById('day' + i);
         if (!dayDiv) continue;
+        
         const checkbox = document.getElementById('dayCheckbox' + i);
         if (!checkbox) continue;
         
@@ -476,14 +487,21 @@ function updateCalendarStates() {
 
 function buildCalendar() {
     const container = document.getElementById('weeksContainer');
-    if (!container) return;
+    if (!container) {
+        console.error('❌ weeksContainer no encontrado en el DOM');
+        return;
+    }
+    
+    console.log('🏗️ Reconstruyendo calendario...');
     container.innerHTML = '';
+    
     for (let w = 0; w < 4; w++) {
         const box = document.createElement('div');
         box.className = 'week-box';
         box.innerHTML = `<h3>Semana ${w + 1}</h3>`;
         const grid = document.createElement('div');
         grid.className = 'calendar';
+        
         for (let d = 0; d < 7; d++) {
             const idx = w * 7 + d;
             const dayNumber = idx + 1;
@@ -506,7 +524,10 @@ function buildCalendar() {
         box.appendChild(grid);
         container.appendChild(box);
     }
+    
+    // Aplicar estados después de construir
     updateCalendarStates();
+    console.log('✅ Calendario reconstruido correctamente');
 }
 
 function buildWorkoutLog(containerId, exercises, videoIds) {
@@ -616,6 +637,17 @@ async function sincronizarConFirestore() {
         const cloudCargas = data.cargas || {};
         const cloudLastUpdate = data.lastUpdate ? data.lastUpdate.toMillis() : 0;
         const cloudCount = cloudCompleted.filter(Boolean).length;
+        
+        // 🔥 Sincronizar startDate desde Firestore
+        if (data.startDate) {
+            const cloudStartDate = data.startDate;
+            const localStartDate = localStorage.getItem('fitnessStartDate');
+            if (!localStartDate || localStartDate !== cloudStartDate) {
+                localStorage.setItem('fitnessStartDate', cloudStartDate);
+                startDate = cloudStartDate;
+                console.log('📅 startDate sincronizado desde Firestore:', cloudStartDate);
+            }
+        }
 
         console.log(`📊 Local: ${localCount} días, Cloud: ${cloudCount} días`);
 
@@ -652,16 +684,23 @@ async function sincronizarConFirestore() {
             console.log('📤 Subidos datos locales a Firestore (local más reciente)');
         } else {
             console.log('✅ Datos sincronizados (iguales)');
-            // Asegurar que completedDays tenga los datos correctos
             completedDays = localCompleted;
             cargas = localCargas;
         }
         
-        // 🔥 FORZAR ACTUALIZACIÓN DE UI DESPUÉS DE SINCRONIZAR
-        console.log('🔄 Forzando actualización de UI después de sincronización');
-        updateAllUI();
+        // 🔥 FUERZA ACTUALIZACIÓN COMPLETA DE UI
+        console.log('🔄 Forzando actualización completa de UI...');
+        buildCalendar();
         buildWorkoutLog('workoutA', exercisesA, videoIdsA);
         buildWorkoutLog('workoutB', exercisesB, videoIdsB);
+        updateAllUI();
+        
+        // 🔥 SEGUNDA ACTUALIZACIÓN (para asegurar que el DOM se renderizó)
+        setTimeout(() => {
+            console.log('🔄 Segunda actualización de UI (timeout)');
+            updateCalendarStates();
+            updateAdherenceScore();
+        }, 300);
         
     } catch (error) {
         console.error('❌ Error en sincronización:', error);
