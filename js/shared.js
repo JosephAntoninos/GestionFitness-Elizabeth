@@ -46,6 +46,7 @@ async function saveAll() {
     localStorage.setItem('fitnessLastUpdate', String(now));
     try {
         await ClientRepository.saveProgress(completedDays, cargas);
+        console.log('✅ Datos guardados en Firestore');
     } catch (error) {
         console.error('❌ Error al guardar en Firestore, guardado localmente:', error);
         alert('⚠️ No se pudo sincronizar con la nube. Los datos se guardaron localmente.');
