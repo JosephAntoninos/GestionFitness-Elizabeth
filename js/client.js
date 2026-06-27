@@ -188,7 +188,6 @@ function actualizarIndicadorTransformacion() {
     let pesoActual = pesoInicial;
     let musculoActual = musculoInicial;
     let grasaActual = grasaInicial;
-    let evaluacionNombre = "Inicio";
 
     const evalFinal = localStorage.getItem('evaluacion_semana4');
     const evalSemana2 = localStorage.getItem('evaluacion_semana2');
@@ -199,19 +198,16 @@ function actualizarIndicadorTransformacion() {
         pesoActual = data.peso;
         musculoActual = data.musculo;
         grasaActual = data.grasa;
-        evaluacionNombre = "Final";
     } else if (evalSemana2) {
         const data = JSON.parse(evalSemana2);
         pesoActual = data.peso;
         musculoActual = data.musculo;
         grasaActual = data.grasa;
-        evaluacionNombre = "Semana 2";
     } else if (evalSemana1) {
         const data = JSON.parse(evalSemana1);
         pesoActual = data.peso;
         musculoActual = data.musculo;
         grasaActual = data.grasa;
-        evaluacionNombre = "Semana 1";
     }
 
     document.getElementById('peso-actual').textContent = pesoActual + ' kg';
@@ -278,10 +274,7 @@ const CHECKIN_RESPUESTAS_KEY = 'checkinRespuestas';
 
 function mostrarCheckinSiCorresponde() {
     const container = document.getElementById('checkinContainer');
-    if (!container) {
-        console.warn('⚠️ Contenedor de check-in no encontrado');
-        return;
-    }
+    if (!container) return;
     const ultimoCheckin = localStorage.getItem(ULTIMO_CHECKIN_KEY);
     const hoy = new Date().toDateString();
     const diaPrograma = getDiaPrograma();
@@ -290,9 +283,7 @@ function mostrarCheckinSiCorresponde() {
 
     if (esDiaCheckin && !yaHizoCheckinHoy) {
         container.style.display = 'block';
-        document.querySelectorAll('.checkin-btn').forEach(btn => {
-            btn.style.display = 'inline-block';
-        });
+        document.querySelectorAll('.checkin-btn').forEach(btn => btn.style.display = 'inline-block');
         const mensaje = document.getElementById('checkinMensaje');
         if (mensaje) mensaje.style.display = 'none';
     } else {
@@ -325,9 +316,7 @@ async function guardarCheckin(estado) {
 
     const mensaje = document.getElementById('checkinMensaje');
     if (mensaje) mensaje.style.display = 'block';
-    document.querySelectorAll('.checkin-btn').forEach(btn => {
-        btn.style.display = 'none';
-    });
+    document.querySelectorAll('.checkin-btn').forEach(btn => btn.style.display = 'none');
 
     if (respuestas.length >= 2) {
         const ultimasDos = respuestas.slice(-2);
@@ -586,16 +575,16 @@ function updateAllUI() {
 // ================== SINCRONIZACIÓN INTELIGENTE ==================
 async function sincronizarConFirestore() {
     try {
-        // 1. Datos locales
+        // Datos locales
         const localCompleted = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
         const localCargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
-        const localLastUpdate = parseInt(localStorage.getItem('fitnessLastUpdate')) || 0;
         const localCount = localCompleted.filter(Boolean).length;
+        const localLastUpdate = parseInt(localStorage.getItem('fitnessLastUpdate')) || 0;
 
-        // 2. Datos de Firestore
+        // Datos de Firestore
         const doc = await db.collection('clients').doc('elizabeth-001').get();
         if (!doc.exists) {
-            // Primera vez: subir datos locales
+            // No existe en la nube -> subir locales
             await ClientRepository.saveProgress(localCompleted, localCargas);
             console.log('📤 Datos locales subidos a Firestore (primera vez)');
             return;
@@ -606,34 +595,83 @@ async function sincronizarConFirestore() {
         const cloudLastUpdate = data.lastUpdate ? data.lastUpdate.toMillis() : 0;
         const cloudCount = cloudCompleted.filter(Boolean).length;
 
-        // 3. Decidir ganador
-        if (cloudCount > localCount || (cloudCount === localCount && cloudLastUpdate > localLastUpdate)) {
-            // Descargar de la nube
+        console.log(`📊 Local: ${localCount} días, Cloud: ${cloudCount} días`);
+
+        // REGLA PRINCIPAL: SI LA NUBE TIENE MÁS DÍAS -> DESCARGAR SIEMPRE
+        if (cloudCount > localCount) {
             localStorage.setItem('fitnessCompletedDays', JSON.stringify(cloudCompleted));
             localStorage.setItem('fitnessCargas', JSON.stringify(cloudCargas));
             localStorage.setItem('fitnessLastUpdate', String(cloudLastUpdate));
             completedDays = cloudCompleted;
             cargas = cloudCargas;
-            console.log('📥 Datos descargados de Firestore (nube más avanzada)');
-        } else if (localCount > cloudCount || (localCount === cloudCount && localLastUpdate > cloudLastUpdate)) {
-            // Subir a la nube
+            console.log('📥 Descargados datos de Firestore (nube tiene más días)');
+            return;
+        }
+
+        // Si el local tiene más días -> subir
+        if (localCount > cloudCount) {
             await ClientRepository.saveProgress(localCompleted, localCargas);
-            console.log('📤 Datos locales subidos a Firestore (local más avanzado)');
+            console.log('📤 Subidos datos locales a Firestore (local tiene más días)');
+            return;
+        }
+
+        // Misma cantidad de días -> comparar por fecha de última actualización
+        if (cloudLastUpdate > localLastUpdate) {
+            localStorage.setItem('fitnessCompletedDays', JSON.stringify(cloudCompleted));
+            localStorage.setItem('fitnessCargas', JSON.stringify(cloudCargas));
+            localStorage.setItem('fitnessLastUpdate', String(cloudLastUpdate));
+            completedDays = cloudCompleted;
+            cargas = cloudCargas;
+            console.log('📥 Descargados datos de Firestore (más reciente)');
+        } else if (localLastUpdate > cloudLastUpdate) {
+            await ClientRepository.saveProgress(localCompleted, localCargas);
+            console.log('📤 Subidos datos locales a Firestore (local más reciente)');
         } else {
             console.log('✅ Datos sincronizados (iguales)');
         }
     } catch (error) {
         console.error('❌ Error en sincronización:', error);
-        // Mantener datos locales
+        // Mantener datos locales y mostrar alerta
         completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
         cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
-        alert('⚠️ No se pudo sincronizar con la nube. Los datos pueden estar desactualizados.');
+        alert('⚠️ No se pudo sincronizar con la nube. Los datos locales se mantienen.');
     }
 }
 
-// ================== SUSCRIPCIÓN EN TIEMPO REAL (DESACTIVADA) ==================
+// ================== FUERZAR SINCRONIZACIÓN (MANUAL) ==================
+async function forzarSincronizacion() {
+    console.log('🔄 Forzando sincronización desde Firestore...');
+    try {
+        const doc = await db.collection('clients').doc('elizabeth-001').get();
+        if (!doc.exists) {
+            alert('❌ Cliente no encontrado en Firestore.');
+            return;
+        }
+        const data = doc.data();
+        const cloudCompleted = data.completedDays || new Array(TOTAL_DAYS).fill(false);
+        const cloudCargas = data.cargas || {};
+        const cloudLastUpdate = data.lastUpdate ? data.lastUpdate.toMillis() : Date.now();
+
+        localStorage.setItem('fitnessCompletedDays', JSON.stringify(cloudCompleted));
+        localStorage.setItem('fitnessCargas', JSON.stringify(cloudCargas));
+        localStorage.setItem('fitnessLastUpdate', String(cloudLastUpdate));
+        completedDays = cloudCompleted;
+        cargas = cloudCargas;
+        updateAllUI();
+        buildWorkoutLog('workoutA', exercisesA, videoIdsA);
+        buildWorkoutLog('workoutB', exercisesB, videoIdsB);
+        console.log('✅ Sincronización forzada completada. Días:', cloudCompleted.filter(Boolean).length);
+        alert('✅ Datos actualizados desde la nube.');
+    } catch (error) {
+        console.error('❌ Error en sincronización forzada:', error);
+        alert('❌ Error al sincronizar. Revisa la consola.');
+    }
+}
+
+window.forzarSincronizacion = forzarSincronizacion;
+
+// ================== SUSCRIPCIÓN (DESACTIVADA) ==================
 function suscribirClienteConProteccion() {
-    // Por ahora no hacemos nada para evitar parpadeos
     console.log('⏸️ Suscripción en tiempo real desactivada.');
 }
 
@@ -643,34 +681,75 @@ async function inicializarSistema() {
         if (systemInitialized) return;
         initStartDate();
 
-        // 1. Sincronizar
+        // Sincronizar al iniciar
         await sincronizarConFirestore();
 
-        // 2. Cargar datos (ya actualizados)
+        // Cargar datos (ya actualizados)
         completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
         cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
         startDate = localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
 
-        // 3. Inicializar cargas vacías
         const allExercises = [...exercisesA, ...exercisesB];
         allExercises.forEach(ex => {
             if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
         });
 
-        // 4. Construir UI
         buildCalendar();
         buildWorkoutLog('workoutA', exercisesA, videoIdsA);
         buildWorkoutLog('workoutB', exercisesB, videoIdsB);
         updateAllUI();
         systemInitialized = true;
 
-        // 5. Suscripción desactivada (comentada)
-        // suscribirClienteConProteccion();
+        // Agregar botón de sincronización manual en la UI
+        agregarBotonSincronizar();
 
         console.log('✅ Sistema inicializado correctamente');
     } catch (error) {
         console.error('❌ Error en inicialización:', error);
         alert('Hubo un problema al cargar el sistema. Recarga la página.');
+    }
+}
+
+// ================== BOTÓN DE SINCRONIZACIÓN MANUAL ==================
+function agregarBotonSincronizar() {
+    // Buscar el dashboard o el header para agregar el botón
+    const dashboard = document.getElementById('dashboard');
+    if (!dashboard) return;
+
+    // Evitar duplicados
+    if (document.getElementById('syncManualBtn')) return;
+
+    const syncBtn = document.createElement('button');
+    syncBtn.id = 'syncManualBtn';
+    syncBtn.textContent = '🔄 Sincronizar';
+    syncBtn.style.cssText = `
+        background: #2f6a87;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 20px;
+        color: white;
+        cursor: pointer;
+        font-size: 0.7rem;
+        font-weight: 600;
+        transition: 0.3s;
+        margin-left: 8px;
+    `;
+    syncBtn.onmouseover = () => syncBtn.style.background = '#6eb2cc';
+    syncBtn.onmouseout = () => syncBtn.style.background = '#2f6a87';
+    syncBtn.onclick = async () => {
+        syncBtn.textContent = '⏳ Sincronizando...';
+        syncBtn.disabled = true;
+        await forzarSincronizacion();
+        syncBtn.textContent = '🔄 Sincronizar';
+        syncBtn.disabled = false;
+    };
+
+    // Insertar después del botón "Salir"
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.parentElement.appendChild(syncBtn);
+    } else {
+        dashboard.appendChild(syncBtn);
     }
 }
 
@@ -685,7 +764,7 @@ async function checkPin() {
 
     try {
         const doc = await db.collection('clients').doc('elizabeth-001').get();
-        let pinCorrecto = '2929'; // fallback
+        let pinCorrecto = '2929';
         if (doc.exists) {
             pinCorrecto = doc.data().pin || '2929';
         }
@@ -705,7 +784,6 @@ async function checkPin() {
         }
     } catch (error) {
         console.error('Error validando PIN, usando local:', error);
-        // Fallback: usar PIN guardado localmente
         const localPin = localStorage.getItem('fitnessPin') || '2929';
         if (pinIngresado === localPin) {
             localStorage.setItem('fitnessAuth', 'true');
@@ -730,9 +808,7 @@ if (pinInput) {
         }
     });
     pinInput.addEventListener('input', function() {
-        if (pinError) {
-            pinError.style.display = 'none';
-        }
+        if (pinError) pinError.style.display = 'none';
     });
 }
 
