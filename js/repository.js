@@ -1,4 +1,3 @@
-// ================== REPOSITORIO DE DATOS ==================
 const CLIENT_ID = 'elizabeth-001';
 
 const ClientRepository = {
