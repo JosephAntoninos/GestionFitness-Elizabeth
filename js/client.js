@@ -311,7 +311,7 @@ async function guardarCheckin(estado) {
         console.log('✅ Check-in guardado en Firestore');
     } catch (error) {
         console.error('❌ Error al guardar check-in en Firestore:', error);
-        alert('⚠️ Check-in guardado localmente pero no en la nube.');
+        // Sin alerta para no molestar al usuario
     }
 
     const mensaje = document.getElementById('checkinMensaje');
@@ -572,10 +572,10 @@ function updateAllUI() {
     mostrarCheckinSiCorresponde();
 }
 
-// ================== SINCRONIZACIÓN AUTOMÁTICA ==================
+// ================== SINCRONIZACIÓN ROBUSTA ==================
 async function sincronizarConFirestore() {
     try {
-        // Datos locales
+        // Leer datos locales (con valores por defecto)
         let localCompleted = [];
         try {
             localCompleted = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
@@ -591,7 +591,7 @@ async function sincronizarConFirestore() {
         const localCount = localCompleted.filter(Boolean).length;
         const localLastUpdate = parseInt(localStorage.getItem('fitnessLastUpdate')) || 0;
 
-        // Datos de Firestore
+        // Leer Firestore
         const doc = await db.collection('clients').doc('elizabeth-001').get();
         if (!doc.exists) {
             // Primera vez: subir locales
@@ -607,7 +607,7 @@ async function sincronizarConFirestore() {
 
         console.log(`📊 Local: ${localCount} días, Cloud: ${cloudCount} días`);
 
-        // DECISIÓN: SI LA NUBE TIENE MÁS DÍAS -> DESCARGAR
+        // REGLA: SI LA NUBE TIENE MÁS DÍAS -> DESCARGAR SIEMPRE
         if (cloudCount > localCount) {
             localStorage.setItem('fitnessCompletedDays', JSON.stringify(cloudCompleted));
             localStorage.setItem('fitnessCargas', JSON.stringify(cloudCargas));
@@ -641,7 +641,7 @@ async function sincronizarConFirestore() {
         }
     } catch (error) {
         console.error('❌ Error en sincronización:', error);
-        // Mantener datos locales
+        // Fallo silencioso: mantener datos locales
     }
 }
 
@@ -656,26 +656,22 @@ async function inicializarSistema() {
         if (systemInitialized) return;
         initStartDate();
 
-        // Mostrar estado de sincronización
+        // Mostrar mensaje de sincronización en el dashboard
+        const syncMsg = document.createElement('div');
+        syncMsg.id = 'syncStatus';
+        syncMsg.style.cssText = 'font-size:0.7rem; color:#6eb2cc; margin-left:10px;';
+        syncMsg.textContent = '🔄 Sincronizando...';
         const dashboard = document.getElementById('dashboard');
-        let syncStatus = document.getElementById('syncStatus');
-        if (!syncStatus && dashboard) {
-            syncStatus = document.createElement('span');
-            syncStatus.id = 'syncStatus';
-            syncStatus.style.cssText = 'font-size:0.7rem; color:#6eb2cc; margin-left:10px;';
-            syncStatus.textContent = '🔄 Sincronizando...';
-            dashboard.appendChild(syncStatus);
-        }
+        if (dashboard) dashboard.appendChild(syncMsg);
 
         // Sincronizar con Firestore
         await sincronizarConFirestore();
 
-        // Cargar datos actualizados
+        // Cargar datos (ya actualizados)
         completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
         cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
         startDate = localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
 
-        // Inicializar cargas
         const allExercises = [...exercisesA, ...exercisesB];
         allExercises.forEach(ex => {
             if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
@@ -687,18 +683,19 @@ async function inicializarSistema() {
         buildWorkoutLog('workoutB', exercisesB, videoIdsB);
         updateAllUI();
 
-        // Eliminar estado de sincronización
-        if (syncStatus) syncStatus.remove();
+        // Eliminar mensaje de sincronización
+        const syncEl = document.getElementById('syncStatus');
+        if (syncEl) syncEl.remove();
 
         systemInitialized = true;
         console.log('✅ Sistema inicializado correctamente');
     } catch (error) {
         console.error('❌ Error en inicialización:', error);
-        const syncStatus = document.getElementById('syncStatus');
-        if (syncStatus) {
-            syncStatus.textContent = '⚠️ Error de sincronización';
-            setTimeout(() => syncStatus.remove(), 3000);
-        }
+        const syncEl = document.getElementById('syncStatus');
+        if (syncEl) syncEl.textContent = '⚠️ Error de sincronización';
+        setTimeout(() => {
+            if (syncEl) syncEl.remove();
+        }, 3000);
     }
 }
 
