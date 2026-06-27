@@ -19,13 +19,12 @@ let unsubscribeCliente = null;
 
 // ================== FUNCIONES BASE ==================
 function initStartDate() {
-    // Si no hay startDate en localStorage, crear uno nuevo
     if (!startDate) {
         startDate = new Date().toISOString().split('T')[0];
         localStorage.setItem('fitnessStartDate', startDate);
-        console.log('📅 startDate creado en localStorage:', startDate);
+        console.log('📅 startDate creado:', startDate);
     } else {
-        console.log('📅 startDate existente en localStorage:', startDate);
+        console.log('📅 startDate existente:', startDate);
     }
     updateDateDisplay();
 }
@@ -443,6 +442,7 @@ function updateCalendarStates() {
     console.log('📊 Días completados:', completedDays.filter(Boolean).length);
     console.log('📊 Primeros 15 días:', completedDays.slice(0, 15).map(d => d ? '✅' : '⬜').join(' '));
     
+    // Verificar que el contenedor existe
     const container = document.getElementById('weeksContainer');
     if (!container) {
         console.warn('⚠️ weeksContainer no encontrado, reconstruyendo calendario...');
@@ -450,27 +450,34 @@ function updateCalendarStates() {
         return;
     }
     
+    // Actualizar cada día individualmente
     for (let i = 0; i < TOTAL_DAYS; i++) {
         const dayDiv = document.getElementById('day' + i);
         if (!dayDiv) continue;
+        
         const checkbox = document.getElementById('dayCheckbox' + i);
         if (!checkbox) continue;
         
+        // Limpiar estados anteriores
         dayDiv.classList.remove('state-pending', 'state-completed', 'state-omitted', 'state-unavailable');
         
         if (i > todayIndex) {
+            // Días futuros: bloqueados
             dayDiv.classList.add('state-unavailable');
             checkbox.disabled = true;
             checkbox.checked = false;
         } else if (completedDays[i] === true) {
+            // Días completados
             dayDiv.classList.add('state-completed');
             checkbox.disabled = false;
             checkbox.checked = true;
         } else if (i === todayIndex) {
+            // Día actual sin marcar
             dayDiv.classList.add('state-pending');
             checkbox.disabled = false;
             checkbox.checked = false;
         } else {
+            // Días pasados sin marcar
             dayDiv.classList.add('state-omitted');
             checkbox.disabled = false;
             checkbox.checked = false;
@@ -518,6 +525,7 @@ function buildCalendar() {
         container.appendChild(box);
     }
     
+    // Aplicar estados después de construir
     updateCalendarStates();
     console.log('✅ Calendario reconstruido correctamente');
 }
@@ -598,7 +606,7 @@ function updateAllUI() {
     mostrarCheckinSiCorresponde();
 }
 
-// ================== SINCRONIZACIÓN ROBUSTA (CON PRIORIDAD LOCAL) ==================
+// ================== SINCRONIZACIÓN ROBUSTA ==================
 async function sincronizarConFirestore() {
     try {
         // Leer datos locales
@@ -616,20 +624,11 @@ async function sincronizarConFirestore() {
         }
         const localCount = localCompleted.filter(Boolean).length;
         const localLastUpdate = parseInt(localStorage.getItem('fitnessLastUpdate')) || 0;
-        
-        // 🔥 PRIORIDAD: startDate de localStorage SIEMPRE
-        let localStartDate = localStorage.getItem('fitnessStartDate');
-        
+
         // Leer Firestore
         const doc = await db.collection('clients').doc('elizabeth-001').get();
         if (!doc.exists) {
-            // Primera vez: subir todo (incluyendo startDate)
             await ClientRepository.saveProgress(localCompleted, localCargas);
-            if (localStartDate) {
-                await db.collection('clients').doc('elizabeth-001').update({
-                    startDate: localStartDate
-                });
-            }
             console.log('📤 Datos locales subidos a Firestore (primera vez)');
             return;
         }
@@ -638,25 +637,19 @@ async function sincronizarConFirestore() {
         const cloudCargas = data.cargas || {};
         const cloudLastUpdate = data.lastUpdate ? data.lastUpdate.toMillis() : 0;
         const cloudCount = cloudCompleted.filter(Boolean).length;
-        const cloudStartDate = data.startDate || null;
-
-        // 🔥 REGLA: SIEMPRE PRIORIZAR startDate LOCAL
-        if (!localStartDate && cloudStartDate) {
-            localStorage.setItem('fitnessStartDate', cloudStartDate);
-            startDate = cloudStartDate;
-            console.log('📅 startDate tomado de Firestore (local vacío):', cloudStartDate);
-        } else if (localStartDate) {
-            if (cloudStartDate !== localStartDate) {
-                await db.collection('clients').doc('elizabeth-001').update({
-                    startDate: localStartDate
-                });
-                console.log('📅 startDate local subido a Firestore:', localStartDate);
+        
+        // 🔥 Sincronizar startDate desde Firestore
+        if (data.startDate) {
+            const cloudStartDate = data.startDate;
+            const localStartDate = localStorage.getItem('fitnessStartDate');
+            if (!localStartDate || localStartDate !== cloudStartDate) {
+                localStorage.setItem('fitnessStartDate', cloudStartDate);
+                startDate = cloudStartDate;
+                console.log('📅 startDate sincronizado desde Firestore:', cloudStartDate);
             }
-            startDate = localStartDate;
         }
 
         console.log(`📊 Local: ${localCount} días, Cloud: ${cloudCount} días`);
-        console.log(`📅 startDate local: ${localStartDate}, cloud: ${cloudStartDate}`);
 
         // REGLA: SI LA NUBE TIENE MÁS DÍAS -> DESCARGAR SIEMPRE
         if (cloudCount > localCount) {
@@ -666,6 +659,7 @@ async function sincronizarConFirestore() {
             completedDays = cloudCompleted;
             cargas = cloudCargas;
             console.log('📥 Descargados datos de Firestore (nube tiene más días)');
+            console.log('📊 completedDays después de descarga:', completedDays.filter(Boolean).length, 'días');
             return;
         }
 
@@ -684,6 +678,7 @@ async function sincronizarConFirestore() {
             completedDays = cloudCompleted;
             cargas = cloudCargas;
             console.log('📥 Descargados datos de Firestore (más reciente)');
+            console.log('📊 completedDays después de descarga:', completedDays.filter(Boolean).length, 'días');
         } else if (localLastUpdate > cloudLastUpdate) {
             await ClientRepository.saveProgress(localCompleted, localCargas);
             console.log('📤 Subidos datos locales a Firestore (local más reciente)');
@@ -700,7 +695,7 @@ async function sincronizarConFirestore() {
         buildWorkoutLog('workoutB', exercisesB, videoIdsB);
         updateAllUI();
         
-        // 🔥 SEGUNDA ACTUALIZACIÓN
+        // 🔥 SEGUNDA ACTUALIZACIÓN (para asegurar que el DOM se renderizó)
         setTimeout(() => {
             console.log('🔄 Segunda actualización de UI (timeout)');
             updateCalendarStates();
@@ -723,7 +718,7 @@ async function inicializarSistema() {
         if (systemInitialized) return;
         initStartDate();
 
-        // Mostrar mensaje de sincronización
+        // Mostrar mensaje de sincronización en el dashboard
         const syncMsg = document.createElement('div');
         syncMsg.id = 'syncStatus';
         syncMsg.style.cssText = 'font-size:0.7rem; color:#6eb2cc; margin-left:10px;';
@@ -748,11 +743,13 @@ async function inicializarSistema() {
             if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
         });
 
+        // Construir UI
         buildCalendar();
         buildWorkoutLog('workoutA', exercisesA, videoIdsA);
         buildWorkoutLog('workoutB', exercisesB, videoIdsB);
         updateAllUI();
 
+        // Eliminar mensaje de sincronización
         const syncEl = document.getElementById('syncStatus');
         if (syncEl) syncEl.remove();
 
