@@ -332,6 +332,13 @@ async function guardarCheckin(estado) {
     }, 3000);
 }
 
+document.querySelectorAll('.checkin-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const estado = this.dataset.estado;
+        guardarCheckin(estado);
+    });
+});
+
 // ================== ALERTAS DEL ASISTENTE ==================
 function updateAlerts() {
     const todayIndex = getDayIndexFromStart();
@@ -568,7 +575,7 @@ function updateAllUI() {
 // ================== SINCRONIZACIÓN AUTOMÁTICA ==================
 async function sincronizarConFirestore() {
     try {
-        // Leer datos locales (con valores por defecto)
+        // Datos locales
         let localCompleted = [];
         try {
             localCompleted = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
@@ -584,9 +591,10 @@ async function sincronizarConFirestore() {
         const localCount = localCompleted.filter(Boolean).length;
         const localLastUpdate = parseInt(localStorage.getItem('fitnessLastUpdate')) || 0;
 
-        // Leer Firestore
+        // Datos de Firestore
         const doc = await db.collection('clients').doc('elizabeth-001').get();
         if (!doc.exists) {
+            // Primera vez: subir locales
             await ClientRepository.saveProgress(localCompleted, localCargas);
             console.log('📤 Datos locales subidos a Firestore (primera vez)');
             return;
@@ -599,7 +607,7 @@ async function sincronizarConFirestore() {
 
         console.log(`📊 Local: ${localCount} días, Cloud: ${cloudCount} días`);
 
-        // DECISIÓN: SI LA NUBE TIENE MÁS DÍAS, DESCARGAR SIEMPRE
+        // DECISIÓN: SI LA NUBE TIENE MÁS DÍAS -> DESCARGAR
         if (cloudCount > localCount) {
             localStorage.setItem('fitnessCompletedDays', JSON.stringify(cloudCompleted));
             localStorage.setItem('fitnessCargas', JSON.stringify(cloudCargas));
@@ -610,7 +618,7 @@ async function sincronizarConFirestore() {
             return;
         }
 
-        // Si local tiene más días, subir
+        // Si local tiene más días -> subir
         if (localCount > cloudCount) {
             await ClientRepository.saveProgress(localCompleted, localCargas);
             console.log('📤 Subidos datos locales a Firestore (local tiene más días)');
@@ -633,7 +641,7 @@ async function sincronizarConFirestore() {
         }
     } catch (error) {
         console.error('❌ Error en sincronización:', error);
-        // Si falla, mantener datos locales sin molestar al usuario
+        // Mantener datos locales
     }
 }
 
@@ -648,46 +656,49 @@ async function inicializarSistema() {
         if (systemInitialized) return;
         initStartDate();
 
-        // Mostrar mensaje de sincronización en el dashboard (solo texto)
-        const syncMsg = document.createElement('div');
-        syncMsg.id = 'syncStatus';
-        syncMsg.style.cssText = 'font-size:0.7rem; color:#6eb2cc; margin-left:10px;';
-        syncMsg.textContent = '🔄 Sincronizando...';
+        // Mostrar estado de sincronización
         const dashboard = document.getElementById('dashboard');
-        if (dashboard) dashboard.appendChild(syncMsg);
+        let syncStatus = document.getElementById('syncStatus');
+        if (!syncStatus && dashboard) {
+            syncStatus = document.createElement('span');
+            syncStatus.id = 'syncStatus';
+            syncStatus.style.cssText = 'font-size:0.7rem; color:#6eb2cc; margin-left:10px;';
+            syncStatus.textContent = '🔄 Sincronizando...';
+            dashboard.appendChild(syncStatus);
+        }
 
-        // 1. Sincronizar con Firestore
+        // Sincronizar con Firestore
         await sincronizarConFirestore();
 
-        // 2. Cargar datos (ya actualizados por sincronización)
+        // Cargar datos actualizados
         completedDays = JSON.parse(localStorage.getItem('fitnessCompletedDays')) || new Array(TOTAL_DAYS).fill(false);
         cargas = JSON.parse(localStorage.getItem('fitnessCargas')) || {};
         startDate = localStorage.getItem('fitnessStartDate') || new Date().toISOString().split('T')[0];
 
+        // Inicializar cargas
         const allExercises = [...exercisesA, ...exercisesB];
         allExercises.forEach(ex => {
             if (!cargas[ex]) cargas[ex] = ['', '', '', ''];
         });
 
-        // 3. Construir UI
+        // Construir UI
         buildCalendar();
         buildWorkoutLog('workoutA', exercisesA, videoIdsA);
         buildWorkoutLog('workoutB', exercisesB, videoIdsB);
         updateAllUI();
 
-        // 4. Eliminar mensaje de sincronización
-        const syncEl = document.getElementById('syncStatus');
-        if (syncEl) syncEl.remove();
+        // Eliminar estado de sincronización
+        if (syncStatus) syncStatus.remove();
 
         systemInitialized = true;
         console.log('✅ Sistema inicializado correctamente');
     } catch (error) {
         console.error('❌ Error en inicialización:', error);
-        const syncEl = document.getElementById('syncStatus');
-        if (syncEl) syncEl.textContent = '⚠️ Error de sincronización';
-        setTimeout(() => {
-            if (syncEl) syncEl.remove();
-        }, 3000);
+        const syncStatus = document.getElementById('syncStatus');
+        if (syncStatus) {
+            syncStatus.textContent = '⚠️ Error de sincronización';
+            setTimeout(() => syncStatus.remove(), 3000);
+        }
     }
 }
 
@@ -770,14 +781,6 @@ document.querySelectorAll('.guardar-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const semana = parseInt(this.dataset.semana);
         guardarEvaluacion(semana);
-    });
-});
-
-// Asignar eventos a check-in (ya están asignados arriba, pero lo dejo por si acaso)
-document.querySelectorAll('.checkin-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-        const estado = this.dataset.estado;
-        guardarCheckin(estado);
     });
 });
 
